@@ -1267,6 +1267,18 @@ function buildSemanticGutter(inst: Instruction, contextSpriteNum?: number): HTML
     }
   }
 
+  // Magic: name from WORD.DAT (LEARN_MAGIC uses same word table as items, different index range)
+  const magicParam = inst.params.find(p => p.type === "magic");
+  if (magicParam && state.assets) {
+    const name = state.assets.getWord(magicParam.raw);
+    if (name) {
+      const span = document.createElement("span");
+      span.className = "script-gutter-text";
+      span.textContent = name;
+      el.append(span);
+    }
+  }
+
   // Player battle sprite preview (SET_PLAYER_IMAGE)
   const battleSpriteParam = inst.params.find(p => p.type === "battleSprite");
   if (battleSpriteParam && state.files["F.MKF"]) {
