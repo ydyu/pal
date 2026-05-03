@@ -408,14 +408,14 @@ input:disabled {
 
 .info-grid {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 0.65rem;
 }
 
 .info-row {
   display: grid;
-  grid-template-columns: minmax(0, 8rem) minmax(0, 1fr);
-  gap: 0.75rem;
-  align-items: start;
+  grid-template-columns: 1fr;
+  gap: 0.15rem;
 }
 
 .info-row dt,
@@ -777,6 +777,15 @@ input:disabled {
   }
 }
 
+.object-sprite-preview {
+  display: block;
+  image-rendering: pixelated;
+  border-radius: 8px;
+  background: rgba(6, 8, 14, 0.6);
+  padding: 4px;
+  margin-bottom: 0.75rem;
+}
+
 @media (max-width: 680px) {
   /* Allow the header and page to scroll away naturally on mobile */
   html,
@@ -888,11 +897,11 @@ input:disabled {
   }
 
   /* Viewer layout becomes a single-column vertical stack on mobile
-     Rows: viewer-stage (40vh), mobile-tabs (auto), sidebars (1fr) */
+     Rows: viewer-stage (55vh), mobile-tabs (auto), sidebars (1fr) */
   .viewer-layout {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 40vh auto 1fr;
+    grid-template-rows: 55vh auto 1fr;
     height: 100vh; /* Fill the screen when active */
     gap: 0;
     border: none;
@@ -972,11 +981,17 @@ input:disabled {
     overflow-x: hidden;
   }
 
-  /* Script grid wrapping on mobile */
+  .inspector-section {
+    padding: 0.4rem 0.5rem;
+  }
+
+  /* Script grid wrapping on mobile — pulled flush with scroll container edges */
   .script-grid {
     grid-template-columns: auto auto 1fr;
     gap: 0.2rem 0.6rem;
-    padding: 0.6rem;
+    padding: 0.4rem 0;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
   }
 
   .script-marginalia {

@@ -30,7 +30,6 @@ import {
   clampViewport,
   findFirstPortraitId,
   formatRewardLabel,
-  getMapViewportOrigin,
   getSceneBounds,
   resolveAnimatedObjectFrame,
   resolveInitialSceneNumber,
@@ -139,7 +138,7 @@ const OVERLAY_LABEL_FG = "#f6f8ff";
 const OVERLAY_LABEL_SHADOW = "rgba(0, 0, 0, 0.6)";
 const POINTER_DRAG_THRESHOLD = 4;
 const ANIMATION_FRAME_MS = 240;
-const SCRIPT_LINE_LIMIT = 256;
+const SCRIPT_LINE_LIMIT = 512;
 
 const fileStatusElements = new Map<string, HTMLElement>();
 const fileReadTokens = new Map<string, number>();
@@ -684,7 +683,7 @@ function populateSceneSelect(sceneCount: number, preferredScene?: number): void 
   dom.sceneSelect.disabled = false;
 }
 
-function getInitialViewport(sceneNumber: number, model: SceneModel, bounds: SceneBounds): Viewport {
+function getInitialViewport(sceneNumber: number, _model: SceneModel, bounds: SceneBounds): Viewport {
   if (state.saveData && state.saveData.numScene === sceneNumber) {
     return {
       x: state.saveData.viewportX,
@@ -694,11 +693,9 @@ function getInitialViewport(sceneNumber: number, model: SceneModel, bounds: Scen
     };
   }
 
-  const origin = getMapViewportOrigin(model.map);
-  void bounds;
   return {
-    x: origin.x,
-    y: origin.y,
+    x: Math.floor(bounds.minX + bounds.width / 2 - state.viewport.width / 2),
+    y: Math.floor(bounds.minY + bounds.height / 2 - state.viewport.height / 2),
     width: state.viewport.width,
     height: state.viewport.height,
   };
@@ -748,7 +745,7 @@ function loadScene(sceneNumber: number, recenter: boolean): void {
     ? getInitialViewport(sceneNumber, model, bounds)
     : clampViewport(state.viewport, bounds);
 
-  dom.centerPartyButton.disabled = getCurrentSaveViewport() === null;
+  dom.centerPartyButton.disabled = false;
   updateViewerStatus("success");
   setPlaceholder();
   renderInspector();
@@ -773,7 +770,18 @@ async function initializeViewer(): Promise<void> {
     const assets = new ResourceManager(getResourceFiles());
     const saveBytes = state.files["SAVE.RPG"];
     const saveData = saveBytes ? assets.parseSave(saveBytes) : undefined;
-    const initialScene = resolveInitialSceneNumber(assets.getSceneCount(), saveData?.numScene);
+
+    // Restore scene/slot from URL hash if present and valid
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const hashSceneRaw = Number(hashParams.get("scene"));
+    const hashSlotRaw = Number(hashParams.get("slot"));
+    const sceneCount = assets.getSceneCount();
+    const hashScene = Number.isFinite(hashSceneRaw) && hashSceneRaw >= 1 && hashSceneRaw <= sceneCount
+      ? hashSceneRaw : undefined;
+    const hashSlot = hashScene !== undefined && hashParams.has("slot") && Number.isFinite(hashSlotRaw)
+      ? hashSlotRaw : undefined;
+
+    const initialScene = hashScene ?? resolveInitialSceneNumber(sceneCount, saveData?.numScene);
 
     state.assets = assets;
     state.saveData = saveData;
@@ -784,7 +792,12 @@ async function initializeViewer(): Promise<void> {
     dom.sceneSelect.value = String(initialScene);
     setActiveTab("map-view-tab");
     loadScene(initialScene, true);
-    history.replaceState({ scene: initialScene }, "", `#scene=${initialScene}`);
+    if (hashSlot !== undefined) {
+      selectObject(hashSlot, true);
+      history.replaceState({ scene: initialScene, slot: hashSlot }, "", `#scene=${initialScene}&slot=${hashSlot}`);
+    } else {
+      history.replaceState({ scene: initialScene }, "", `#scene=${initialScene}`);
+    }
 
     const saveMessage = saveData
       ? ` Save file ${state.fileNames["SAVE.RPG"] ?? "SAVE.RPG"} opened at scene ${formatSceneNumber(initialScene)}.`
@@ -825,7 +838,6 @@ function buildInfoSection(title: string): HTMLElement {
 
 function buildInfoGrid(rows: Array<[string, string]>): HTMLDivElement {
   const wrapper = document.createElement("div");
-  wrapper.className = "info-grid";
 
   const list = document.createElement("dl");
   list.className = "info-grid";
@@ -1396,12 +1408,35 @@ function renderInspector(): void {
     );
     dom.inspectorDetails.append(sceneSection);
 
-    const help = buildInfoSection("Selection");
-    const text = document.createElement("p");
-    text.className = "status-line";
-    text.textContent = "Drag to pan, click active map objects to inspect them, or choose any object from the scene list.";
-    help.append(text);
-    dom.inspectorDetails.append(help);
+    const makePinCallback = (idx: number) => () => {
+      if (!state.scriptStack.includes(idx)) {
+        state.scriptStack.push(idx);
+        state.collapsedScripts.delete(idx);
+        const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+        const savedScrollTop = scrollContainer.scrollTop;
+        renderInspector();
+        scrollContainer.scrollTop = savedScrollTop;
+      }
+      scrollScriptBlockIntoView(idx);
+    };
+
+    const enterIdx = model.scene.scriptOnEnter;
+    const enterInstructions = state.assets
+      ? parseScript(state.assets.getScriptChunk(), enterIdx, SCRIPT_LINE_LIMIT)
+      : [];
+    dom.inspectorDetails.append(
+      buildScriptSection("Script on Enter", enterIdx, enterInstructions, false, undefined, undefined, makePinCallback(enterIdx))
+    );
+
+    const teleportIdx = model.scene.scriptOnTeleport;
+    if (teleportIdx !== 0 && teleportIdx !== enterIdx) {
+      const teleportInstructions = state.assets
+        ? parseScript(state.assets.getScriptChunk(), teleportIdx, SCRIPT_LINE_LIMIT)
+        : [];
+      dom.inspectorDetails.append(
+        buildScriptSection("Script on Teleport", teleportIdx, teleportInstructions, false, undefined, undefined, makePinCallback(teleportIdx))
+      );
+    }
 
     appendScriptStack();
     return;
@@ -1415,9 +1450,22 @@ function renderInspector(): void {
   dom.inspectorSubtitle.textContent = `${title} · slot ${selected.data.slot}`;
 
   const objectSection = buildInfoSection("Object Details");
+  if (selected.data.spriteNum > 0) {
+    const spriteCanvas = renderTinyPreview("worldFrame", 0, selected.data.spriteNum, 2);
+    if (spriteCanvas) {
+      const scale = 2;
+      const scaled = document.createElement("canvas");
+      scaled.width = spriteCanvas.width * scale;
+      scaled.height = spriteCanvas.height * scale;
+      scaled.className = "object-sprite-preview";
+      const ctx = scaled.getContext("2d")!;
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(spriteCanvas, 0, 0, scaled.width, scaled.height);
+      objectSection.append(scaled);
+    }
+  }
   objectSection.append(
     buildInfoGrid([
-      ["Title", title],
       ["Position", `${selected.x}, ${selected.y}`],
       ["Tile", `${tile.x}, ${tile.y}, h=${tile.h}`],
       ["State", String(selected.state)],
@@ -1870,12 +1918,19 @@ function initControls(): void {
   });
 
   dom.centerPartyButton.addEventListener("click", () => {
+    if (!state.runtime) return;
     const saveViewport = getCurrentSaveViewport();
-    if (!saveViewport) {
-      return;
+    if (saveViewport) {
+      state.viewport = saveViewport;
+    } else {
+      const b = state.runtime.bounds;
+      state.viewport = {
+        x: Math.floor(b.minX + b.width / 2 - state.viewport.width / 2),
+        y: Math.floor(b.minY + b.height / 2 - state.viewport.height / 2),
+        width: state.viewport.width,
+        height: state.viewport.height,
+      };
     }
-
-    state.viewport = saveViewport;
     invalidateRender();
   });
 
