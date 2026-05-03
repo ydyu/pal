@@ -1686,7 +1686,7 @@ function selectObject(slot: number | undefined, centerOnObject: boolean): void {
 
   state.selectedSlot = slot;
   if (slot !== undefined) {
-    if (window.innerWidth < 680) {
+    if (window.innerWidth < 680 || (window.innerWidth <= 900 && window.screen.orientation?.type.startsWith("landscape"))) {
       setMobileTab("inspector");
     }
 
