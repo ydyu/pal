@@ -966,6 +966,10 @@ input:disabled {
     min-width: 2.5rem;
   }
 
+  .toolbar-status {
+    display: none;
+  }
+
   .viewer-canvas-shell {
     padding: 0;
   }
@@ -1006,5 +1010,176 @@ input:disabled {
     border-bottom: none;
     margin-bottom: 0;
     padding-bottom: 0;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  /* Allow header to scroll away for more vertical space */
+  html,
+  body {
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-shell {
+    display: block;
+    height: auto;
+    overflow: visible;
+  }
+
+  .app-main {
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Compact header: hide title, reduce padding, keep tabs */
+  .app-header {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .app-heading h1,
+  .app-subtitle,
+  .explorer-header,
+  .inspector-header {
+    display: none;
+  }
+
+  .tab-panel,
+  #map-view-tab {
+    padding: 0;
+    height: auto;
+  }
+
+  /* Hide toolbar status (scene/map info redundant with dropdown in compact layout) */
+  .toolbar-status {
+    display: none;
+  }
+
+  /* Compact toolbar — same as portrait */
+  .viewer-toolbar {
+    padding: 0.4rem 0.6rem;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+  }
+
+  .toolbar-field {
+    flex: 1 1 auto;
+    font-size: 0.8rem;
+  }
+
+  .toolbar-field select {
+    width: 100%;
+    padding: 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  #center-party-button {
+    padding: 0.4rem;
+    min-width: 2.5rem;
+  }
+
+  /* 2-column landscape: map on left, tabs+sidebar on right */
+  .viewer-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  .viewer-stage {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    border-right: 1px solid rgba(141, 158, 255, 0.1);
+    border-bottom: none;
+  }
+
+  /* Mobile tab bar — same visual treatment as portrait */
+  .mobile-tabs {
+    display: flex !important;
+    grid-column: 2;
+    grid-row: 1;
+    gap: 0;
+    border-bottom: 1px solid rgba(141, 158, 255, 0.12);
+    background: #0a0e18;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .mobile-tabs button {
+    flex: 1;
+    padding: 0.6rem 0.5rem;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: #9ea7c7;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-tabs button.active {
+    color: #ffffff;
+    border-bottom-color: #5478ff;
+    background: rgba(84, 120, 255, 0.12);
+  }
+
+  .explorer-sidebar,
+  .inspector-sidebar {
+    grid-column: 2;
+    grid-row: 2;
+    height: 100%;
+    overflow-y: auto;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    background: #0d1016;
+    padding: 0;
+    display: block;
+  }
+
+  .explorer-scroll,
+  .inspector-scroll {
+    padding: 0.75rem;
+    overflow: visible;
+  }
+
+  /* Script grid compact layout with flush edges */
+  .script-grid {
+    grid-template-columns: auto auto 1fr;
+    gap: 0.2rem 0.6rem;
+    padding: 0.4rem 0;
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+  }
+
+  .script-marginalia {
+    grid-column: 2 / -1;
+    max-width: none;
+    padding: 0.2rem 0 0.8rem 0;
+    margin-bottom: 0.4rem;
+    border-bottom: 1px solid rgba(141, 158, 255, 0.1);
+  }
+
+  .script-marginalia:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .is-hidden-mobile {
+    display: none !important;
   }
 }
