@@ -1,0 +1,236 @@
+Listing item codes 61 to 294 (likely inventory items):
+itemcode= 61 (0x3D) name=觀音符
+itemcode= 62 (0x3E) name=聖靈符
+itemcode= 63 (0x3F) name=金剛符
+itemcode= 64 (0x40) name=淨衣符
+itemcode= 65 (0x41) name=靈心符
+itemcode= 66 (0x42) name=天師符
+itemcode= 67 (0x43) name=風靈符
+itemcode= 68 (0x44) name=雷靈符
+itemcode= 69 (0x45) name=水靈符
+itemcode= 70 (0x46) name=火靈符
+itemcode= 71 (0x47) name=土靈符
+itemcode= 72 (0x48) name=舍利子
+itemcode= 73 (0x49) name=玉菩提
+itemcode= 74 (0x4A) name=銀杏子
+itemcode= 75 (0x4B) name=龍爪花
+itemcode= 76 (0x4C) name=糯米糕
+itemcode= 77 (0x4D) name=流風散
+itemcode= 78 (0x4E) name=茶葉蛋
+itemcode= 79 (0x4F) name=行運丸
+itemcode= 80 (0x50) name=糖葫蘆
+itemcode= 81 (0x51) name=蠟燭
+itemcode= 82 (0x52) name=符紙
+itemcode= 83 (0x53) name=檀香
+itemcode= 84 (0x54) name=大蒜
+itemcode= 85 (0x55) name=七心海棠
+itemcode= 86 (0x56) name=酒
+itemcode= 87 (0x57) name=雄黃
+itemcode= 88 (0x58) name=靈葫仙丹
+itemcode= 89 (0x59) name=九節菖蒲
+itemcode= 90 (0x5A) name=驅魔香
+itemcode= 91 (0x5B) name=十里香
+itemcode= 92 (0x5C) name=水果
+itemcode= 93 (0x5D) name=鴛鴦五珍膾
+itemcode= 94 (0x5E) name=醃肉
+itemcode= 95 (0x5F) name=還魂香
+itemcode= 96 (0x60) name=贖魂燈
+itemcode= 97 (0x61) name=孟婆湯
+itemcode= 98 (0x62) name=天香續命露
+itemcode= 99 (0x63) name=止血草
+itemcode=100 (0x64) name=行軍丹
+itemcode=101 (0x65) name=金創藥
+itemcode=102 (0x66) name=蟠果
+itemcode=103 (0x67) name=紫菁玉蓉膏
+itemcode=104 (0x68) name=鼠兒果
+itemcode=105 (0x69) name=還神丹
+itemcode=106 (0x6A) name=龍涎草
+itemcode=107 (0x6B) name=靈山仙芝
+itemcode=108 (0x6C) name=雪蓮子
+itemcode=109 (0x6D) name=天仙玉露
+itemcode=110 (0x6E) name=神仙茶
+itemcode=111 (0x6F) name=牡丹花露
+itemcode=112 (0x70) name=試煉果
+itemcode=113 (0x71) name=女媧石
+itemcode=114 (0x72) name=八仙石
+itemcode=115 (0x73) name=蜂巢
+itemcode=116 (0x74) name=屍腐肉
+itemcode=117 (0x75) name=自動售貨機
+itemcode=118 (0x76) name=廢品回收器
+itemcode=119 (0x77) name=食品加工站
+itemcode=120 (0x78) name=金蠶培養皿
+itemcode=121 (0x79) name=毒物合成室
+itemcode=122 (0x7A) name=鶴頂紅
+itemcode=123 (0x7B) name=孔雀膽
+itemcode=124 (0x7C) name=血海棠
+itemcode=125 (0x7D) name=斷腸草
+itemcode=126 (0x7E) name=醍醐香
+itemcode=127 (0x7F) name=忘魂花
+itemcode=128 (0x80) name=紫罌粟
+itemcode=129 (0x81) name=鬼枯籐
+itemcode=130 (0x82) name=腹蛇涎
+itemcode=131 (0x83) name=蜂王蜜
+itemcode=132 (0x84) name=雪蛤蟆
+itemcode=133 (0x85) name=赤蠍粉
+itemcode=134 (0x86) name=化屍水
+itemcode=135 (0x87) name=迷魂香
+itemcode=136 (0x88) name=九陰散
+itemcode=137 (0x89) name=無影毒
+itemcode=138 (0x8A) name=三屍蠱
+itemcode=139 (0x8B) name=金蠶蠱
+itemcode=140 (0x8C) name=幻蠱
+itemcode=141 (0x8D) name=隱蠱
+itemcode=142 (0x8E) name=冰蠶蠱
+itemcode=143 (0x8F) name=火蠶蠱
+itemcode=144 (0x90) name=食妖蟲
+itemcode=145 (0x91) name=靈蠱
+itemcode=146 (0x92) name=爆烈蠱
+itemcode=147 (0x93) name=碧血蠶
+itemcode=148 (0x94) name=蠱
+itemcode=149 (0x95) name=赤血蠶
+itemcode=150 (0x96) name=金蠶王
+itemcode=151 (0x97) name=毒蟲卵
+itemcode=152 (0x98) name=傀儡蟲
+itemcode=153 (0x99) name=梅花鏢
+itemcode=154 (0x9A) name=袖裡劍
+itemcode=155 (0x9B) name=透骨釘
+itemcode=156 (0x9C) name=雷火珠
+itemcode=157 (0x9D) name=毒龍砂
+itemcode=158 (0x9E) name=吸星鎖
+itemcode=159 (0x9F) name=纏魂絲
+itemcode=160 (0xA0) name=綑仙繩
+itemcode=161 (0xA1) name=無影神針
+itemcode=162 (0xA2) name=血玲瓏
+itemcode=163 (0xA3) name=長鞭
+itemcode=164 (0xA4) name=九截鞭
+itemcode=165 (0xA5) name=金蛇鞭
+itemcode=166 (0xA6) name=木劍
+itemcode=167 (0xA7) name=短刀
+itemcode=168 (0xA8) name=鐵劍
+itemcode=169 (0xA9) name=大刀
+itemcode=170 (0xAA) name=仙女劍
+itemcode=171 (0xAB) name=長劍
+itemcode=172 (0xAC) name=紅纓刀
+itemcode=173 (0xAD) name=越女劍
+itemcode=174 (0xAE) name=戒刀
+itemcode=175 (0xAF) name=玄鐵劍
+itemcode=176 (0xB0) name=芙蓉刀
+itemcode=177 (0xB1) name=柳月刀
+itemcode=178 (0xB2) name=青鋒劍
+itemcode=179 (0xB3) name=苗刀
+itemcode=180 (0xB4) name=鳳鳴刀
+itemcode=181 (0xB5) name=雙龍劍
+itemcode=182 (0xB6) name=玉女劍
+itemcode=183 (0xB7) name=金童劍
+itemcode=184 (0xB8) name=龍泉劍
+itemcode=185 (0xB9) name=鬼牙刀
+itemcode=186 (0xBA) name=七星劍
+itemcode=187 (0xBB) name=玄冥寶刀
+itemcode=188 (0xBC) name=巫月神刀
+itemcode=189 (0xBD) name=磐龍劍
+itemcode=190 (0xBE) name=太極劍
+itemcode=191 (0xBF) name=無塵劍
+itemcode=192 (0xC0) name=青蛇杖
+itemcode=193 (0xC1) name=鬼頭杖
+itemcode=194 (0xC2) name=冥蛇杖
+itemcode=195 (0xC3) name=天蛇杖
+itemcode=196 (0xC4) name=頭巾
+itemcode=197 (0xC5) name=青絲巾
+itemcode=198 (0xC6) name=髮飾
+itemcode=199 (0xC7) name=銀釵
+itemcode=200 (0xC8) name=翠玉金釵
+itemcode=201 (0xC9) name=皮帽
+itemcode=202 (0xCA) name=珍珠冠
+itemcode=203 (0xCB) name=天師帽
+itemcode=204 (0xCC) name=紫金冠
+itemcode=205 (0xCD) name=天蠶絲帶
+itemcode=206 (0xCE) name=鳳凰羽毛
+itemcode=207 (0xCF) name=沖天冠
+itemcode=208 (0xD0) name=布袍
+itemcode=209 (0xD1) name=籐甲
+itemcode=210 (0xD2) name=絲衣
+itemcode=211 (0xD3) name=鐵鎖衣
+itemcode=212 (0xD4) name=夜行衣
+itemcode=213 (0xD5) name=青銅甲
+itemcode=214 (0xD6) name=羅漢袍
+itemcode=215 (0xD7) name=鐵鱗甲
+itemcode=216 (0xD8) name=天師道袍
+itemcode=217 (0xD9) name=精鐵戰甲
+itemcode=218 (0xDA) name=金縷衣
+itemcode=219 (0xDB) name=鬼針冑
+itemcode=220 (0xDC) name=天蠶寶衣
+itemcode=221 (0xDD) name=青龍寶甲
+itemcode=222 (0xDE) name=白虎之鎧
+itemcode=223 (0xDF) name=玄武戰袍
+itemcode=224 (0xE0) name=朱雀戰衣
+itemcode=225 (0xE1) name=披風
+itemcode=226 (0xE2) name=護肩
+itemcode=227 (0xE3) name=武士披風
+itemcode=228 (0xE4) name=護心鏡
+itemcode=229 (0xE5) name=霓虹羽衣
+itemcode=230 (0xE6) name=菩提袈裟
+itemcode=231 (0xE7) name=虎紋披風
+itemcode=232 (0xE8) name=鳳紋披風
+itemcode=233 (0xE9) name=龍紋披風
+itemcode=234 (0xEA) name=聖靈披風
+itemcode=235 (0xEB) name=草鞋
+itemcode=236 (0xEC) name=木鞋
+itemcode=237 (0xED) name=布靴
+itemcode=238 (0xEE) name=繡花鞋
+itemcode=239 (0xEF) name=鐵履
+itemcode=240 (0xF0) name=武僧靴
+itemcode=241 (0xF1) name=鹿皮靴
+itemcode=242 (0xF2) name=疾風靴
+itemcode=243 (0xF3) name=蓮花靴
+itemcode=244 (0xF4) name=虎皮靴
+itemcode=245 (0xF5) name=龍鱗靴
+itemcode=246 (0xF6) name=步雲靴
+itemcode=247 (0xF7) name=魅影神靴
+itemcode=248 (0xF8) name=香袋
+itemcode=249 (0xF9) name=護腕
+itemcode=250 (0xFA) name=鐵護腕
+itemcode=251 (0xFB) name=竹笛
+itemcode=252 (0xFC) name=珍珠
+itemcode=253 (0xFD) name=玉鐲
+itemcode=254 (0xFE) name=唸珠
+itemcode=255 (0xFF) name=銀針
+itemcode=256 (0x100) name=銅鏡
+itemcode=257 (0x101) name=八卦鏡
+itemcode=258 (0x102) name=乾坤鏡
+itemcode=259 (0x103) name=豹牙手環
+itemcode=260 (0x104) name=聖靈珠
+itemcode=261 (0x105) name=金罡珠
+itemcode=262 (0x106) name=五毒珠
+itemcode=263 (0x107) name=風靈珠
+itemcode=264 (0x108) name=雷靈珠
+itemcode=265 (0x109) name=水靈珠
+itemcode=266 (0x10A) name=火靈珠
+itemcode=267 (0x10B) name=土靈珠
+itemcode=268 (0x10C) name=煉蠱皿
+itemcode=269 (0x10D) name=壽葫蘆
+itemcode=270 (0x10E) name=紫金葫蘆
+itemcode=271 (0x10F) name=布包
+itemcode=272 (0x110) name=桂花酒
+itemcode=273 (0x111) name=紫金丹
+itemcode=274 (0x112) name=玉佛珠
+itemcode=275 (0x113) name=金鳳凰蛋殼
+itemcode=276 (0x114) name=火眼麒麟角
+itemcode=277 (0x115) name=青龍碧血玉
+itemcode=278 (0x116) name=毒龍膽
+itemcode=279 (0x117) name=破天錘
+itemcode=280 (0x118) name=包袱
+itemcode=281 (0x119) name=銀杏果
+itemcode=282 (0x11A) name=鯉魚
+itemcode=283 (0x11B) name=鹿茸
+itemcode=284 (0x11C) name=釣竿
+itemcode=285 (0x11D) name=捕獸夾
+itemcode=286 (0x11E) name=六神丹
+itemcode=287 (0x11F) name=情書
+itemcode=288 (0x120) name=玉珮
+itemcode=289 (0x121) name=石鑰匙
+itemcode=290 (0x122) name=天書
+itemcode=291 (0x123) name=香蕉
+itemcode=292 (0x124) name=鳳紋手絹
+itemcode=293 (0x125) name=手卷
+
+Codes 294 and above are likely skills or non-inventory entries.

@@ -1,0 +1,22 @@
+{
+  "name": "pal-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "build:viewer": "vite build"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.99",
+    "@types/pngjs": "^6.0.5",
+    "cac": "^7.0.0",
+    "omggif": "^1.0.10",
+    "pngjs": "^7.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.2",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vitest": "^3.2.4"
+  }
+}

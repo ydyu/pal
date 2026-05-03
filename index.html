@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PAL Map Viewer</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div class="app-heading">
+        <h1>PAL Map Viewer</h1>
+        <p class="app-subtitle">Load PAL resource archives and inspect scenes in a docked workspace.</p>
+      </div>
+      <nav id="main-nav" class="tab-nav" aria-label="Viewer sections" role="tablist">
+        <button
+          id="tab-files"
+          class="tab-button active"
+          type="button"
+          role="tab"
+          data-tab="files-tab"
+          aria-controls="files-tab"
+          aria-selected="true"
+        >
+          Files
+        </button>
+        <button
+          id="tab-map-view"
+          class="tab-button"
+          type="button"
+          role="tab"
+          data-tab="map-view-tab"
+          aria-controls="map-view-tab"
+          aria-selected="false"
+          disabled
+        >
+          Map View
+        </button>
+      </nav>
+    </header>
+
+    <main class="app-main">
+      <section id="files-tab" class="tab-panel active" role="tabpanel" aria-labelledby="tab-files">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2>Files</h2>
+            <p>Select the PAL game data directory once, then optionally load a save file.</p>
+          </div>
+          <div class="file-grid">
+            <label class="file-card" for="pal-directory">
+              <span class="file-card__title">PAL Data Directory</span>
+              <span class="file-card__help">Loads MAP.MKF, GOP.MKF, MGO.MKF, PAT.MKF, SSS.MKF, M.MSG, WORD.DAT, and optional RGM.MKF from one folder</span>
+              <input id="pal-directory" type="file" webkitdirectory multiple />
+              <span class="file-card__status" data-file-status="pal-directory">No directory selected</span>
+            </label>
+            <label class="file-card" for="rpg-save">
+              <span class="file-card__title">Save File (.RPG)</span>
+              <span class="file-card__help">Optional: load current scene and save state</span>
+              <input id="rpg-save" type="file" accept=".RPG,.rpg" data-file-label=".RPG save" />
+              <span class="file-card__status" data-file-status="rpg-save">No file selected</span>
+            </label>
+          </div>
+
+          <div class="files-actions">
+            <button id="initialize-button" class="button-primary" type="button">
+              Initialize Viewer
+            </button>
+            <p id="init-status" class="status-line" aria-live="polite">
+              Load the required files to enable initialization.
+            </p>
+          </div>
+        </div>
+
+        <div class="panel-section panel-section--status">
+          <h2>Core Library</h2>
+          <p id="library-status" class="status-line">Loading viewer modules...</p>
+        </div>
+      </section>
+
+      <section
+        id="map-view-tab"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-map-view"
+        hidden
+      >
+        <div class="viewer-layout">
+          <aside id="explorer-sidebar" class="explorer-sidebar" aria-label="Scene objects">
+            <div class="explorer-header">
+              <h2>Scene Objects</h2>
+              <p id="object-list-status" class="status-line">No scene loaded.</p>
+            </div>
+            <div class="explorer-scroll">
+              <div id="scene-object-list" class="object-list"></div>
+            </div>
+          </aside>
+
+          <section class="viewer-stage" aria-label="Map view">
+            <div class="viewer-toolbar">
+              <label class="toolbar-field" for="scene-select">
+                <span>Scene</span>
+                <select id="scene-select" disabled>
+                  <option value="">No scene loaded</option>
+                </select>
+              </label>
+              <button id="center-party-button" class="button-secondary" type="button" title="Restore Save View" disabled>
+                📍
+              </button>
+              <p id="viewer-status" class="toolbar-status" aria-live="polite">
+                Viewer not initialized.
+              </p>
+            </div>
+
+            <div id="viewer-canvas-shell" class="viewer-canvas-shell">
+              <canvas id="view-canvas" aria-label="Map canvas"></canvas>
+              <div id="viewer-placeholder" class="viewer-placeholder">
+                Load files in the Files tab, initialize the viewer, and the save file will open its current scene automatically.
+              </div>
+            </div>
+          </section>
+
+          <div id="mobile-tabs" class="mobile-tabs" hidden>
+            <button id="mobile-tab-objects" class="active" type="button">Objects</button>
+            <button id="mobile-tab-inspector" type="button">Inspector</button>
+          </div>
+
+          <aside id="inspector-sidebar" class="inspector-sidebar is-hidden-mobile" aria-label="Inspector sidebar">
+            <div class="inspector-header">
+              <div>
+                <h2>Inspector</h2>
+                <p id="inspector-subtitle">Selected object details will appear here.</p>
+              </div>
+            </div>
+            <div class="inspector-scroll">
+              <div id="inspector-details" class="inspector-details">
+                Select an object in Map View to inspect it.
+              </div>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./src/viewer/main.ts"></script>
+</body>
+</html>
