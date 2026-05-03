@@ -235,6 +235,14 @@ function setMobileTab(tab: "objects" | "inspector"): void {
   dom.inspectorSidebar.classList.toggle("is-hidden-mobile", isObjects);
 }
 
+/** Returns the element that actually scrolls the inspector (desktop: inspector-scroll; mobile: inspector-sidebar). */
+function getInspectorScrollContainer(): HTMLElement {
+  const scroll = dom.inspectorDetails.parentElement as HTMLElement;
+  return getComputedStyle(scroll).overflow === "visible"
+    ? (scroll.parentElement as HTMLElement)
+    : scroll;
+}
+
 function setStatus(element: HTMLElement, message: string, tone: StatusTone = "neutral"): void {
   element.textContent = message;
   if (tone === "neutral") {
@@ -952,7 +960,7 @@ function buildParamElement(p: DecodedParam, instIndex?: number): HTMLElement {
       if (!state.scriptStack.includes(targetIdx)) {
         state.scriptStack.push(targetIdx);
         state.collapsedScripts.delete(targetIdx);
-        const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+        const scrollContainer = getInspectorScrollContainer();
         const savedScrollTop = scrollContainer.scrollTop;
         renderInspector();
         scrollContainer.scrollTop = savedScrollTop;
@@ -1370,7 +1378,7 @@ function appendScriptStack(): void {
         stackInstructions,
         isCollapsed,
         () => {
-          const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+          const scrollContainer = getInspectorScrollContainer();
           const savedScrollTop = scrollContainer.scrollTop;
           if (state.collapsedScripts.has(stackIdx)) {
             state.collapsedScripts.delete(stackIdx);
@@ -1381,7 +1389,7 @@ function appendScriptStack(): void {
           scrollContainer.scrollTop = savedScrollTop;
         },
         () => {
-          const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+          const scrollContainer = getInspectorScrollContainer();
           const savedScrollTop = scrollContainer.scrollTop;
           state.scriptStack = state.scriptStack.filter((i) => i !== stackIdx);
           state.collapsedScripts.delete(stackIdx);
@@ -1424,7 +1432,7 @@ function renderInspector(): void {
       if (!state.scriptStack.includes(idx)) {
         state.scriptStack.push(idx);
         state.collapsedScripts.delete(idx);
-        const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+        const scrollContainer = getInspectorScrollContainer();
         const savedScrollTop = scrollContainer.scrollTop;
         renderInspector();
         scrollContainer.scrollTop = savedScrollTop;
@@ -1499,7 +1507,7 @@ function renderInspector(): void {
       if (!state.scriptStack.includes(idx)) {
         state.scriptStack.push(idx);
         state.collapsedScripts.delete(idx);
-        const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+        const scrollContainer = getInspectorScrollContainer();
         const savedScrollTop = scrollContainer.scrollTop;
         renderInspector();
         scrollContainer.scrollTop = savedScrollTop;
@@ -1515,7 +1523,7 @@ function renderInspector(): void {
         if (!state.scriptStack.includes(idx)) {
           state.scriptStack.push(idx);
           state.collapsedScripts.delete(idx);
-          const scrollContainer = dom.inspectorDetails.parentElement as HTMLElement;
+          const scrollContainer = getInspectorScrollContainer();
           const savedScrollTop = scrollContainer.scrollTop;
           renderInspector();
           scrollContainer.scrollTop = savedScrollTop;
