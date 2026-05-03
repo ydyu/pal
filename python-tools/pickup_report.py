@@ -53,19 +53,12 @@ from pathlib import Path
 
 import sss_decompile as sss
 
-GAME_DIR = Path("/data/data/com.termux/files/home/dev/palgame")
+GAME_DIR = Path(__file__).resolve().parent.parent.parent / "palgame"
 EVTBL_BASE = 0x325C
 EVTBL_STRIDE = 0x20
 SAVE_SCENE_OFF    = 0x0008
 SAVE_VIEWPORT_OFF = 0x0002   # u16 wViewportX, u16 wViewportY
 SAVE_PARTY0_OFF   = 0x002C   # PARTY[0]: u16 role, s16 x, s16 y, u16 frame, u16 imgoff
-
-OP_END           = 0x0000
-OP_START_BATTLE  = 0x0007
-OP_ADD_CASH      = 0x001E
-OP_ADD_ITEM      = 0x001F
-OP_SHOW_DIALOGUE = 0xFFFF
-OP_CHANGE_SCENE  = 0x0059
 
 # SDLPAL OBJECTSTATE / TRIGGERMODE — see sdlpal-src/global.h:75-93.
 STATE_HIDDEN = 0
@@ -185,16 +178,16 @@ def walk_pickup_script(scripts: bytes, idx: int, max_ops: int = 64):
         if i >= total_ops: break
         op, a, b, c = struct.unpack_from("<4H", scripts, i * 8)
         ops.append((i, op, a, b, c))
-        if op == OP_SHOW_DIALOGUE:
+        if op == sss.Opcode.SHOW_DIALOGUE:
             if not rewards:
                 last_pre = a
             else:
                 last_post = a
-        if op == OP_ADD_ITEM:
+        if op == sss.Opcode.ADD_ITEM:
             rewards.append(("item", a))
-        elif op == OP_ADD_CASH:
-            rewards.append(("cash", a if a < 0x8000 else a - 0x10000))
-        if op == OP_END:
+        elif op == sss.Opcode.ADD_CASH:
+            rewards.append(("cash", sss.to_signed16(a)))
+        if op == sss.Opcode.STOP_EXECUTION:
             break
     return rewards, (last_pre if last_pre is not None else last_post), ops
 
@@ -204,9 +197,9 @@ def find_exit_scene(scripts: bytes, idx: int, max_ops: int = 80) -> int | None:
     total_ops = len(scripts) // 8
     for i in range(idx, min(idx + max_ops, total_ops)):
         op, a = struct.unpack_from("<2H", scripts, i * 8)
-        if op == OP_CHANGE_SCENE:
+        if op == sss.Opcode.CHANGE_SCENE:
             return a
-        if op == OP_END:
+        if op == sss.Opcode.STOP_EXECUTION:
             break
     return None
 
@@ -384,7 +377,7 @@ def report(save_path: Path, sss_path: Path, msg_path: Path, word_path: Path,
            show_all: bool, scope_map: bool, forced_scene: int | None,
            show_script: bool, show_plot: bool, show_quest: bool, show_raw: bool):
     save = save_path.read_bytes()
-    subs = sss.read_mkf(sss_path)
+    subs, _buf, _offs = sss.read_mkf(sss_path)
     msgs = sss.load_messages(subs, msg_path)
     item_names = load_item_names(word_path)
     template  = subs[0]

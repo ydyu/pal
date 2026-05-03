@@ -121,7 +121,7 @@ def save_backup(path: Path) -> Path:
     return backup_path
 
 
-WORD_DAT = Path('WORD.DAT')
+WORD_DAT = Path(__file__).resolve().parent.parent.parent / 'palgame' / 'WORD.DAT'
 
 def get_item_name(item_id, word_path: Path | str | None = None):
     path = Path(word_path) if word_path is not None else WORD_DAT
@@ -265,7 +265,8 @@ def main():
     if candidate.exists():
         WORD_DAT = candidate
     else:
-        WORD_DAT = Path('WORD.DAT')
+        # Fallback to relative to script
+        WORD_DAT = Path(__file__).resolve().parent.parent.parent / 'palgame' / 'WORD.DAT'
 
     data = bytearray(save_path.read_bytes())
     slots = read_slots(data, ITEM_TABLE_OFFSET, ITEM_SLOT_SIZE, MAX_SLOTS)

@@ -24,7 +24,7 @@ if [ $# -gt 0 ] && [[ "$1" =~ ^[0-9]+$ ]]; then
   INTERVAL="$1"; shift
 fi
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
+DIR="$(cd "$(dirname "$0")" && pwd)/python-tools"
 TMP="${TMPDIR:-/tmp}/pickup_watch.$$.rpg"
 trap 'rm -f "$TMP"' EXIT
 
