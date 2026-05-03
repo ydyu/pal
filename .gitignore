@@ -4,8 +4,9 @@ node_modules/
 tmp/
 sdlpal-src/
 plan/
-goalie-*/
 .goalie/
+goalie-*/
+goalie_*.sh
 goalie_task_*.md
 goalie_verify_*.md
 goalie_goal_*.md
