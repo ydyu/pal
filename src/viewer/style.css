@@ -761,31 +761,6 @@ input:disabled {
   font-size: 0.9rem;
 }
 
-@media (max-width: 1200px) {
-  .app-header {
-    align-items: start;
-    flex-direction: column;
-  }
-
-  .viewer-layout {
-    grid-template-columns: 150px minmax(0, 1fr) 480px;
-  }
-
-  .info-row {
-    grid-template-columns: 1fr;
-    gap: 0.2rem;
-  }
-}
-
-.object-sprite-preview {
-  display: block;
-  image-rendering: pixelated;
-  border-radius: 8px;
-  background: rgba(6, 8, 14, 0.6);
-  padding: 4px;
-  margin-bottom: 0.75rem;
-}
-
 @media (max-width: 680px) {
   /* Allow the header and page to scroll away naturally on mobile */
   html,
@@ -1013,7 +988,7 @@ input:disabled {
   }
 }
 
-@media (max-width: 900px) and (orientation: landscape) {
+@media (max-width: 1200px) and (orientation: landscape) {
   /* Allow header to scroll away for more vertical space */
   html,
   body {
