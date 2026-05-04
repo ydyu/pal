@@ -626,6 +626,25 @@ input:disabled {
   border-color: rgba(52, 211, 153, 0.6);
 }
 
+.script-param--position {
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96, 165, 250, 0.35);
+  border-radius: 4px;
+  color: #bfdbfe;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0 0.3em;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.script-param--position:hover,
+.script-param--position:focus-visible {
+  background: rgba(96, 165, 250, 0.2);
+  border-color: rgba(96, 165, 250, 0.6);
+  outline: none;
+}
+
 .script-section-header {
   display: flex;
   align-items: center;

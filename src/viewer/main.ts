@@ -3,6 +3,7 @@ import * as pal from "../index.js";
 import {
   Blitter,
   MemorySurface,
+  Opcode,
   PaletteRenderer,
   ResourceManager,
   SceneEngine,
@@ -1172,7 +1173,22 @@ function navigateScene(
   }
 }
 
-function navigateObject(slot: number, pushHistory = true, fromAddr?: number): void {
+function navigateToTile(targetTile: TileTarget, pushHistory = true, fromAddr?: number): void {
+  if (!state.runtime) {
+    return;
+  }
+  if (pushHistory) {
+    syncCurrentStateToHistory(fromAddr);
+  }
+
+  applyTileViewport(targetTile);
+
+  if (pushHistory) {
+    pushHistoryState(createHistoryState(state.runtime.sceneNumber, state.selectedSlot, undefined, targetTile));
+  }
+}
+
+function navigateObject(slot: number, pushHistory = true, fromAddr?: number, targetTile?: TileTarget): void {
   if (!state.assets) return;
   if (pushHistory) syncCurrentStateToHistory(fromAddr);
 
@@ -1186,10 +1202,80 @@ function navigateObject(slot: number, pushHistory = true, fromAddr?: number): vo
 
   if (!state.runtime?.model.objects.has(slot)) return;
   selectObject(slot, true);
+  if (targetTile) {
+    applyTileViewport(targetTile);
+  }
 
   if (pushHistory && state.runtime) {
-    pushHistoryState(createHistoryState(state.runtime.sceneNumber, slot));
+    pushHistoryState(createHistoryState(state.runtime.sceneNumber, slot, undefined, targetTile));
   }
+}
+
+function isPositionJumpInstruction(inst: Instruction): boolean {
+  return inst.op === Opcode.SET_PARTY_POS
+    || inst.op === Opcode.SET_EVENT_POS
+    || inst.op === Opcode.WALK_TO_TILE
+    || inst.op === Opcode.WALK_TO_TILE_SLOW;
+}
+
+function getInstructionTargetTile(inst: Instruction): TileTarget | undefined {
+  const x = inst.params.find((param) => param.label === "x" && param.type === "number")?.raw;
+  const y = inst.params.find((param) => param.label === "y" && param.type === "number")?.raw;
+  return resolveTileTarget(x, y);
+}
+
+function formatPositionJumpText(inst: Instruction): string {
+  return inst.params
+    .filter((param) => param.label === "x" || param.label === "y" || param.label === "half")
+    .map((param) => `${param.label}=${param.raw}`)
+    .join(" ");
+}
+
+function resolveInstructionTargetSlot(inst: Instruction): number | undefined {
+  if (inst.op !== Opcode.SET_EVENT_POS) {
+    return undefined;
+  }
+
+  const eventParam = inst.params.find((param) => param.type === "event");
+  if (!eventParam || eventParam.raw === 0 || eventParam.raw === 0xFFFF) {
+    return undefined;
+  }
+  return eventParam.raw - 1;
+}
+
+function buildInstructionParamElements(inst: Instruction): HTMLElement[] {
+  if (!isPositionJumpInstruction(inst)) {
+    return inst.params.map((param) => buildParamElement(param, inst.index));
+  }
+
+  const targetTile = getInstructionTargetTile(inst);
+  if (!targetTile) {
+    return inst.params.map((param) => buildParamElement(param, inst.index));
+  }
+
+  const elements: HTMLElement[] = [];
+  if (inst.op === Opcode.SET_EVENT_POS) {
+    const eventParam = inst.params.find((param) => param.type === "event");
+    if (eventParam) {
+      elements.push(buildParamElement(eventParam, inst.index));
+    }
+  }
+
+  const jump = document.createElement("button");
+  jump.type = "button";
+  jump.className = "script-param script-param--position";
+  jump.textContent = formatPositionJumpText(inst);
+  jump.addEventListener("click", () => {
+    const targetSlot = resolveInstructionTargetSlot(inst);
+    if (targetSlot !== undefined) {
+      navigateObject(targetSlot, true, inst.index, targetTile);
+      return;
+    }
+    navigateToTile(targetTile, true, inst.index);
+  });
+  elements.push(jump);
+
+  return elements;
 }
 
 function buildParamElement(p: DecodedParam, instIndex?: number): HTMLElement {
@@ -1332,8 +1418,8 @@ function buildScriptSection(
 
         const params = document.createElement("span");
         params.className = "script-params";
-        for (const p of inst.params) {
-          params.append(buildParamElement(p, inst.index));
+        for (const paramElement of buildInstructionParamElements(inst)) {
+          params.append(paramElement);
         }
 
         const gutter = buildSemanticGutter(inst, contextSpriteNum);
