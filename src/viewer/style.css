@@ -464,6 +464,11 @@ input:disabled {
   color: #baf4cc;
 }
 
+.badge[data-tone="exit"] {
+  background: rgba(103, 230, 255, 0.18);
+  color: #c7f4ff;
+}
+
 .script-grid {
   display: grid;
   grid-template-columns: auto auto 1fr auto;
