@@ -16,6 +16,40 @@ export interface SceneBounds {
   height: number;
 }
 
+export interface ExitInfo {
+  sceneId: number;
+  x?: number;
+  y?: number;
+  h?: number;
+}
+
+export function getScriptExit(instructions: Instruction[]): ExitInfo | null {
+  for (let i = 0; i < instructions.length; i++) {
+    const inst = instructions[i]!;
+    if (inst.op === Opcode.CHANGE_SCENE) {
+      const sceneParam = inst.params.find((p) => p.type === "scene");
+      if (!sceneParam) continue;
+
+      const exit: ExitInfo = { sceneId: sceneParam.raw };
+
+      // Look for landing coordinates in adjacent instructions
+      const posInst = [instructions[i + 1], instructions[i - 1]].find((inst) => inst?.op === Opcode.SET_PARTY_POS);
+      if (posInst) {
+        const [x, y, h] = posInst.params.map((p) => p.raw);
+        if (x !== undefined && y !== undefined) {
+          Object.assign(exit, h !== undefined ? { x, y, h } : { x, y });
+        }
+      }
+      return exit;
+    }
+
+    if (inst.op === Opcode.STOP_EXECUTION || inst.op === Opcode.STOP_AND_CHANGE) {
+      break;
+    }
+  }
+  return null;
+}
+
 export function resolveInitialSceneNumber(sceneCount: number, preferredScene?: number): number {
   if (sceneCount < 1) {
     throw new Error("No scenes are available in the loaded data.");

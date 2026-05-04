@@ -10,6 +10,7 @@ import {
   getSpriteBounds,
   parseScript,
   pixelToTile,
+  tileToPixel,
   toSigned16,
   type ActiveObject,
   type Color,
@@ -30,9 +31,11 @@ import {
   clampViewport,
   findFirstPortraitId,
   formatRewardLabel,
+  getScriptExit,
   getSceneBounds,
   resolveAnimatedObjectFrame,
   resolveInitialSceneNumber,
+  type ExitInfo,
   type SceneBounds,
 } from "./viewer-helpers.js";
 
@@ -73,6 +76,20 @@ interface ObjectSummary {
   title: string;
   summary: string;
   rewardLabels: string[];
+  exit?: ExitInfo;
+}
+
+interface TileTarget {
+  tx: number;
+  ty: number;
+}
+
+interface ViewerHistoryState {
+  scene?: number;
+  slot?: number;
+  addr?: number;
+  tx?: number;
+  ty?: number;
 }
 
 interface ScriptDetails {
@@ -131,6 +148,8 @@ const RESOURCE_FILE_BY_NAME = new Map<string, ResourceFileSpec>(
 
 const OVERLAY_REWARD_COLOR = "#ffd54f";
 const OVERLAY_REWARD_FILL = "rgba(255, 213, 79, 0.14)";
+const OVERLAY_EXIT_COLOR = "#63e6ff";
+const OVERLAY_EXIT_FILL = "rgba(99, 230, 255, 0.14)";
 const OVERLAY_SELECTION_COLOR = "#63e6ff";
 const OVERLAY_SELECTION_FILL = "rgba(99, 230, 255, 0.18)";
 const OVERLAY_LABEL_BG = "rgba(8, 11, 18, 0.82)";
@@ -626,13 +645,21 @@ function buildObjectSummaries(model: SceneModel, assets: ResourceManager): Map<n
   for (const object of model.objects.values()) {
     const summary = assets.getScriptSummary(object.data.triggerScript).trim();
     const rewardLabels = collectScriptRewards(scriptChunk, object.data.triggerScript, assets).map(formatRewardLabel);
-    const title = summary || rewardLabels[0] || `Object ${object.data.slot}`;
-    summaries.set(object.data.slot, {
+
+    const instructions = parseScript(scriptChunk, object.data.triggerScript, 20);
+    const exit = getScriptExit(instructions) || undefined;
+
+    const title = summary || rewardLabels[0] || (exit ? `Exit to Scene ${exit.sceneId}` : `Object ${object.data.slot}`);
+    const objectSummary: ObjectSummary = {
       slot: object.data.slot,
       title,
       summary,
       rewardLabels,
-    });
+    };
+    if (exit) {
+      objectSummary.exit = exit;
+    }
+    summaries.set(object.data.slot, objectSummary);
   }
 
   return summaries;
@@ -709,7 +736,16 @@ function populateSceneSelect(sceneCount: number, preferredScene?: number): void 
   dom.sceneSelect.disabled = false;
 }
 
-function getInitialViewport(sceneNumber: number, _model: SceneModel, bounds: SceneBounds): Viewport {
+function getInitialViewport(
+  sceneNumber: number,
+  _model: SceneModel,
+  bounds: SceneBounds,
+  targetTile?: TileTarget
+): Viewport {
+  if (targetTile) {
+    return getViewportForTileTarget(targetTile, bounds);
+  }
+
   if (state.saveData && state.saveData.numScene === sceneNumber) {
     return {
       x: state.saveData.viewportX,
@@ -741,7 +777,171 @@ function getCurrentSaveViewport(): Viewport | null {
   };
 }
 
-function loadScene(sceneNumber: number, recenter: boolean): void {
+function parseHashInteger(hashParams: URLSearchParams, key: string): number | undefined {
+  const raw = hashParams.get(key);
+  if (raw === null) {
+    return undefined;
+  }
+  const value = Number(raw);
+  return Number.isInteger(value) ? value : undefined;
+}
+
+function resolveTileTarget(tx?: number, ty?: number): TileTarget | undefined {
+  if (tx === undefined || ty === undefined) {
+    return undefined;
+  }
+  return { tx, ty };
+}
+
+function getViewportCenterTile(viewport: Viewport): TileTarget {
+  const centerX = viewport.x + Math.floor(viewport.width / 2);
+  const centerY = viewport.y + Math.floor(viewport.height / 2);
+  const tile = pixelToTile(centerX, centerY);
+  return { tx: tile.x, ty: tile.y };
+}
+
+function createHistoryState(
+  scene: number,
+  slot?: number,
+  addr?: number,
+  targetTile?: TileTarget
+): ViewerHistoryState {
+  const historyState: ViewerHistoryState = { scene };
+  if (slot !== undefined) {
+    historyState.slot = slot;
+  }
+  if (addr !== undefined) {
+    historyState.addr = addr;
+  }
+  if (targetTile) {
+    historyState.tx = targetTile.tx;
+    historyState.ty = targetTile.ty;
+  }
+  return historyState;
+}
+
+function buildHistoryHash(historyState: ViewerHistoryState): string {
+  if (historyState.scene === undefined) {
+    return window.location.hash || "";
+  }
+
+  const params = new URLSearchParams();
+  params.set("scene", String(historyState.scene));
+  if (historyState.slot !== undefined) {
+    params.set("slot", String(historyState.slot));
+  }
+  if (historyState.tx !== undefined && historyState.ty !== undefined) {
+    params.set("tx", String(historyState.tx));
+    params.set("ty", String(historyState.ty));
+  }
+  if (historyState.addr !== undefined) {
+    params.set("addr", String(historyState.addr));
+  }
+
+  return `#${params.toString()}`;
+}
+
+function replaceHistoryState(historyState: ViewerHistoryState): void {
+  history.replaceState(historyState, "", buildHistoryHash(historyState));
+}
+
+function pushHistoryState(historyState: ViewerHistoryState): void {
+  history.pushState(historyState, "", buildHistoryHash(historyState));
+}
+
+function readHashHistoryState(sceneCount?: number): ViewerHistoryState {
+  const hashParams = new URLSearchParams(window.location.hash.slice(1));
+  const sceneRaw = parseHashInteger(hashParams, "scene");
+  const scene = sceneRaw !== undefined && sceneRaw >= 1 && (sceneCount === undefined || sceneRaw <= sceneCount)
+    ? sceneRaw
+    : undefined;
+  const slot = scene !== undefined ? parseHashInteger(hashParams, "slot") : undefined;
+  const tx = parseHashInteger(hashParams, "tx");
+  const ty = parseHashInteger(hashParams, "ty");
+  const addr = parseHashInteger(hashParams, "addr");
+  const historyState: ViewerHistoryState = {};
+
+  if (scene !== undefined) {
+    historyState.scene = scene;
+  }
+  if (slot !== undefined) {
+    historyState.slot = slot;
+  }
+  if (tx !== undefined && ty !== undefined) {
+    historyState.tx = tx;
+    historyState.ty = ty;
+  }
+  if (addr !== undefined) {
+    historyState.addr = addr;
+  }
+
+  return historyState;
+}
+
+function mergeHistoryState(hashState: ViewerHistoryState, fallback?: ViewerHistoryState | null): ViewerHistoryState {
+  const scene = hashState.scene ?? fallback?.scene;
+  const slot = hashState.slot ?? fallback?.slot;
+  const addr = hashState.addr ?? fallback?.addr;
+  const tx = hashState.tx ?? fallback?.tx;
+  const ty = hashState.ty ?? fallback?.ty;
+  const historyState: ViewerHistoryState = {};
+
+  if (scene !== undefined) {
+    historyState.scene = scene;
+  }
+  if (slot !== undefined) {
+    historyState.slot = slot;
+  }
+  if (addr !== undefined) {
+    historyState.addr = addr;
+  }
+  if (tx !== undefined && ty !== undefined) {
+    historyState.tx = tx;
+    historyState.ty = ty;
+  }
+
+  return historyState;
+}
+
+function getViewportForTileTarget(targetTile: TileTarget, bounds: SceneBounds): Viewport {
+  const { px, py } = tileToPixel(targetTile.tx, targetTile.ty, 0);
+  return clampViewport({
+    x: Math.floor(px - state.viewport.width / 2),
+    y: Math.floor(py - state.viewport.height / 2),
+    width: state.viewport.width,
+    height: state.viewport.height,
+  }, bounds);
+}
+
+function applyTileViewport(targetTile: TileTarget): void {
+  if (!state.runtime) {
+    return;
+  }
+  state.viewport = getViewportForTileTarget(targetTile, state.runtime.bounds);
+  invalidateRender();
+}
+
+function restoreHistoryState(historyState: ViewerHistoryState): void {
+  if (!state.assets || historyState.scene === undefined) {
+    return;
+  }
+
+  const targetTile = resolveTileTarget(historyState.tx, historyState.ty);
+  dom.sceneSelect.value = String(historyState.scene);
+  loadScene(historyState.scene, true, historyState.slot === undefined ? targetTile : undefined);
+
+  if (historyState.slot !== undefined) {
+    selectObject(historyState.slot, true);
+  }
+  if (targetTile && historyState.slot !== undefined) {
+    applyTileViewport(targetTile);
+  }
+  if (historyState.addr !== undefined) {
+    requestAnimationFrame(() => { scrollInstructionIntoView(historyState.addr!); });
+  }
+}
+
+function loadScene(sceneNumber: number, recenter: boolean, targetTile?: TileTarget): void {
   if (!state.assets) {
     throw new Error("Viewer assets are not initialized.");
   }
@@ -769,7 +969,7 @@ function loadScene(sceneNumber: number, recenter: boolean): void {
 
   resizeCanvasToDisplaySize();
   state.viewport = recenter
-    ? getInitialViewport(sceneNumber, model, bounds)
+    ? getInitialViewport(sceneNumber, model, bounds, targetTile)
     : clampViewport(state.viewport, bounds);
 
   dom.centerPartyButton.disabled = false;
@@ -798,17 +998,15 @@ async function initializeViewer(): Promise<void> {
     const saveBytes = state.files["SAVE.RPG"];
     const saveData = saveBytes ? assets.parseSave(saveBytes) : undefined;
 
-    // Restore scene/slot from URL hash if present and valid
-    const hashParams = new URLSearchParams(window.location.hash.slice(1));
-    const hashSceneRaw = Number(hashParams.get("scene"));
-    const hashSlotRaw = Number(hashParams.get("slot"));
     const sceneCount = assets.getSceneCount();
-    const hashScene = Number.isFinite(hashSceneRaw) && hashSceneRaw >= 1 && hashSceneRaw <= sceneCount
-      ? hashSceneRaw : undefined;
-    const hashSlot = hashScene !== undefined && hashParams.has("slot") && Number.isFinite(hashSlotRaw)
-      ? hashSlotRaw : undefined;
-
-    const initialScene = hashScene ?? resolveInitialSceneNumber(sceneCount, saveData?.numScene);
+    const hashState = readHashHistoryState(sceneCount);
+    const initialScene = hashState.scene ?? resolveInitialSceneNumber(sceneCount, saveData?.numScene);
+    const initialState = createHistoryState(
+      initialScene,
+      hashState.slot,
+      hashState.addr,
+      resolveTileTarget(hashState.tx, hashState.ty)
+    );
 
     state.assets = assets;
     state.saveData = saveData;
@@ -818,13 +1016,8 @@ async function initializeViewer(): Promise<void> {
     populateSceneSelect(assets.getSceneCount(), saveData?.numScene);
     dom.sceneSelect.value = String(initialScene);
     setActiveTab("map-view-tab");
-    loadScene(initialScene, true);
-    if (hashSlot !== undefined) {
-      selectObject(hashSlot, true);
-      history.replaceState({ scene: initialScene, slot: hashSlot }, "", `#scene=${initialScene}&slot=${hashSlot}`);
-    } else {
-      history.replaceState({ scene: initialScene }, "", `#scene=${initialScene}`);
-    }
+    restoreHistoryState(initialState);
+    replaceHistoryState(initialState);
 
     const saveMessage = saveData
       ? ` Save file ${state.fileNames["SAVE.RPG"] ?? "SAVE.RPG"} opened at scene ${formatSceneNumber(initialScene)}.`
@@ -886,7 +1079,7 @@ function buildInfoGrid(rows: Array<[string, string]>): HTMLDivElement {
   return wrapper;
 }
 
-function buildBadge(text: string, tone?: "reward" | "hidden" | "visible"): HTMLSpanElement {
+function buildBadge(text: string, tone?: "reward" | "hidden" | "visible" | "exit"): HTMLSpanElement {
   const badge = document.createElement("span");
   badge.className = "badge";
   badge.textContent = text;
@@ -896,11 +1089,18 @@ function buildBadge(text: string, tone?: "reward" | "hidden" | "visible"): HTMLS
   return badge;
 }
 
-function buildBadgeRow(labels: string[], hidden: boolean): HTMLDivElement {
+function buildBadgeRow(labels: string[], hidden: boolean, exit?: ExitInfo): HTMLDivElement {
   const row = document.createElement("div");
   row.className = "badge-row";
   for (const label of labels) {
     row.append(buildBadge(label, "reward"));
+  }
+  if (exit) {
+    let text = `Exit → ${exit.sceneId}`;
+    if (exit.x !== undefined && exit.y !== undefined) {
+      text += ` @(${exit.x},${exit.y})`;
+    }
+    row.append(buildBadge(text, "exit"));
   }
   if (hidden) {
     row.append(buildBadge("Hidden / inactive", "hidden"));
@@ -922,25 +1122,39 @@ function syncCurrentStateToHistory(fromAddr?: number): void {
   const scene = state.runtime?.sceneNumber;
   if (!scene) return;
   const slot = state.selectedSlot;
-  const current = history.state as { scene?: number; slot?: number; addr?: number } | null;
-  if (current?.scene !== scene || current?.slot !== slot || current?.addr !== fromAddr) {
-    let hash = slot !== undefined ? `#scene=${scene}&slot=${slot}` : `#scene=${scene}`;
-    if (fromAddr !== undefined) hash += `&addr=${fromAddr}`;
-    history.replaceState({ scene, slot, addr: fromAddr }, "", hash);
+  const current = history.state as ViewerHistoryState | null;
+  const targetTile = getViewportCenterTile(state.viewport);
+  const nextState = createHistoryState(scene, slot, fromAddr, targetTile);
+  if (
+    current?.scene !== nextState.scene
+    || current?.slot !== nextState.slot
+    || current?.addr !== nextState.addr
+    || current?.tx !== nextState.tx
+    || current?.ty !== nextState.ty
+  ) {
+    replaceHistoryState(nextState);
   }
 }
 
-function navigateScene(scene: number, slot?: number, pushHistory = true, fromAddr?: number): void {
+function navigateScene(
+  scene: number,
+  slot?: number,
+  pushHistory = true,
+  fromAddr?: number,
+  targetTile?: TileTarget
+): void {
   if (!state.assets) return;
   if (pushHistory) syncCurrentStateToHistory(fromAddr);
   dom.sceneSelect.value = String(scene);
-  loadScene(scene, true);
+  loadScene(scene, true, slot === undefined ? targetTile : undefined);
   if (slot !== undefined) {
     selectObject(slot, true);
   }
+  if (targetTile && slot !== undefined) {
+    applyTileViewport(targetTile);
+  }
   if (pushHistory) {
-    const hash = slot !== undefined ? `#scene=${scene}&slot=${slot}` : `#scene=${scene}`;
-    history.pushState({ scene, slot }, "", hash);
+    pushHistoryState(createHistoryState(scene, slot, undefined, targetTile));
   }
 }
 
@@ -960,8 +1174,7 @@ function navigateObject(slot: number, pushHistory = true, fromAddr?: number): vo
   selectObject(slot, true);
 
   if (pushHistory && state.runtime) {
-    const scene = state.runtime.sceneNumber;
-    history.pushState({ scene, slot }, "", `#scene=${scene}&slot=${slot}`);
+    pushHistoryState(createHistoryState(state.runtime.sceneNumber, slot));
   }
 }
 
@@ -1515,7 +1728,7 @@ function renderInspector(): void {
       ["Summary", summary?.summary || "No short summary available"],
     ])
   );
-  objectSection.append(buildBadgeRow(summary?.rewardLabels ?? [], selected.state === 0));
+  objectSection.append(buildBadgeRow(summary?.rewardLabels ?? [], selected.state === 0, summary?.exit));
   dom.inspectorDetails.append(objectSection);
 
   // Portrait preview moved to Semantic Gutter (4th column in script grid)
@@ -1596,12 +1809,20 @@ function renderObjectList(): void {
     if (summary?.rewardLabels.length) {
       badges.append(buildBadge("Reward", "reward"));
     }
+    if (summary?.exit) {
+      badges.append(buildBadge("Exit", "exit"));
+    }
 
     const tile = pixelToTile(object.x, object.y);
     const meta = document.createElement("span");
     meta.className = "object-list__meta";
-    const rewardHint = summary?.rewardLabels.length ? ` · ${summary.rewardLabels[0]}` : "";
-    meta.textContent = `tile ${tile.x},${tile.y},${tile.h}${rewardHint}`;
+    let metaText = `tile ${tile.x},${tile.y},${tile.h}`;
+    if (summary?.rewardLabels.length) {
+      metaText += ` · ${summary.rewardLabels[0]}`;
+    } else if (summary?.exit) {
+      metaText += ` · → Scene ${summary.exit.sceneId}`;
+    }
+    meta.textContent = metaText;
 
     header.append(title, badges);
     button.append(header, meta);
@@ -1785,7 +2006,14 @@ function drawOverlays(ctx: CanvasRenderingContext2D): void {
 
   for (const object of objects) {
     const summary = state.runtime.objectSummaries.get(object.data.slot);
-    if (!summary || summary.rewardLabels.length === 0 || object.state === 0) {
+    if (!summary || object.state === 0) {
+      continue;
+    }
+
+    const hasRewards = summary.rewardLabels.length > 0;
+    const hasExit = !!summary.exit;
+
+    if (!hasRewards && !hasExit) {
       continue;
     }
 
@@ -1795,16 +2023,27 @@ function drawOverlays(ctx: CanvasRenderingContext2D): void {
       continue;
     }
 
-    ctx.strokeStyle = OVERLAY_REWARD_COLOR;
-    ctx.fillStyle = OVERLAY_REWARD_FILL;
-    drawDiamond(ctx, drawX, drawY);
-    ctx.fill();
-    ctx.stroke();
+    if (hasRewards) {
+      ctx.strokeStyle = OVERLAY_REWARD_COLOR;
+      ctx.fillStyle = OVERLAY_REWARD_FILL;
+      drawDiamond(ctx, drawX, drawY);
+      ctx.fill();
+      ctx.stroke();
 
-    const label = summary.rewardLabels.length > 1
-      ? `${summary.rewardLabels[0]} +${summary.rewardLabels.length - 1}`
-      : summary.rewardLabels[0]!;
-    drawOverlayLabel(ctx, drawX + 18, drawY + 18, label);
+      const label = summary.rewardLabels.length > 1
+        ? `${summary.rewardLabels[0]} +${summary.rewardLabels.length - 1}`
+        : summary.rewardLabels[0]!;
+      drawOverlayLabel(ctx, drawX + 18, drawY + 18, label);
+    } else if (hasExit) {
+      ctx.strokeStyle = OVERLAY_EXIT_COLOR;
+      ctx.fillStyle = OVERLAY_EXIT_FILL;
+      drawDiamond(ctx, drawX, drawY);
+      ctx.fill();
+      ctx.stroke();
+
+      const label = `→ Scene ${summary.exit!.sceneId}`;
+      drawOverlayLabel(ctx, drawX + 18, drawY + 18, label);
+    }
   }
 
   if (state.selectedSlot !== undefined) {
@@ -1936,9 +2175,7 @@ function initControls(): void {
     }
 
     try {
-      loadScene(value, true);
-      history.pushState({ scene: value }, "", `#scene=${value}`);
-      renderInspector();
+      navigateScene(value, undefined, true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       setStatus(dom.viewerStatus, `Failed to load scene ${value}: ${message}`, "error");
@@ -1948,12 +2185,12 @@ function initControls(): void {
 
   window.addEventListener("popstate", (event) => {
     if (!state.initialized || !state.assets) return;
-    const s = event.state as { scene?: number; slot?: number; addr?: number } | null;
-    if (!s?.scene) return;
-    navigateScene(s.scene, s.slot, false);
-    if (s.addr !== undefined) {
-      requestAnimationFrame(() => { scrollInstructionIntoView(s.addr!); });
-    }
+    const historyState = mergeHistoryState(
+      readHashHistoryState(state.assets.getSceneCount()),
+      event.state as ViewerHistoryState | null
+    );
+    if (historyState.scene === undefined) return;
+    restoreHistoryState(historyState);
   });
 
   dom.centerPartyButton.addEventListener("click", () => {
