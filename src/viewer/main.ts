@@ -148,8 +148,8 @@ const RESOURCE_FILE_BY_NAME = new Map<string, ResourceFileSpec>(
 
 const OVERLAY_REWARD_COLOR = "#ffd54f";
 const OVERLAY_REWARD_FILL = "rgba(255, 213, 79, 0.14)";
-const OVERLAY_EXIT_COLOR = "#63e6ff";
-const OVERLAY_EXIT_FILL = "rgba(99, 230, 255, 0.14)";
+const OVERLAY_EXIT_COLOR = "#00e676";
+const OVERLAY_EXIT_FILL = "rgba(0, 230, 118, 0.14)";
 const OVERLAY_SELECTION_COLOR = "#63e6ff";
 const OVERLAY_SELECTION_FILL = "rgba(99, 230, 255, 0.18)";
 const OVERLAY_LABEL_BG = "rgba(8, 11, 18, 0.82)";
@@ -1089,6 +1089,24 @@ function buildBadge(text: string, tone?: "reward" | "hidden" | "visible" | "exit
   return badge;
 }
 
+function buildExitBadge(exit: ExitInfo): HTMLButtonElement {
+  const badge = document.createElement("button");
+  badge.type = "button";
+  badge.className = "badge badge--button";
+  badge.dataset.tone = "exit";
+
+  let text = `Exit → ${exit.sceneId}`;
+  if (exit.x !== undefined && exit.y !== undefined) {
+    text += ` @(${exit.x},${exit.y})`;
+  }
+  badge.textContent = text;
+  badge.addEventListener("click", () => {
+    navigateScene(exit.sceneId, undefined, true, undefined, resolveTileTarget(exit.x, exit.y));
+  });
+
+  return badge;
+}
+
 function buildBadgeRow(labels: string[], hidden: boolean, exit?: ExitInfo): HTMLDivElement {
   const row = document.createElement("div");
   row.className = "badge-row";
@@ -1096,11 +1114,7 @@ function buildBadgeRow(labels: string[], hidden: boolean, exit?: ExitInfo): HTML
     row.append(buildBadge(label, "reward"));
   }
   if (exit) {
-    let text = `Exit → ${exit.sceneId}`;
-    if (exit.x !== undefined && exit.y !== undefined) {
-      text += ` @(${exit.x},${exit.y})`;
-    }
-    row.append(buildBadge(text, "exit"));
+    row.append(buildExitBadge(exit));
   }
   if (hidden) {
     row.append(buildBadge("Hidden / inactive", "hidden"));

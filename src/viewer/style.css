@@ -444,9 +444,26 @@ input:disabled {
   align-items: center;
   min-height: 1.9rem;
   padding: 0.25rem 0.65rem;
+  border: 1px solid transparent;
   border-radius: 999px;
   background: rgba(141, 158, 255, 0.14);
   color: #eef2ff;
+}
+
+.badge--button {
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.badge--button:hover,
+.badge--button:focus-visible {
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.badge--button:active {
+  transform: translateY(0);
 }
 
 .badge[data-tone="reward"] {
@@ -465,8 +482,20 @@ input:disabled {
 }
 
 .badge[data-tone="exit"] {
-  background: rgba(103, 230, 255, 0.18);
-  color: #c7f4ff;
+  background: rgba(0, 230, 118, 0.18);
+  color: #b8ffd9;
+}
+
+.badge--button[data-tone="exit"]:hover,
+.badge--button[data-tone="exit"]:focus-visible {
+  border-color: rgba(0, 230, 118, 0.48);
+  background: rgba(0, 230, 118, 0.28);
+  color: #effff6;
+}
+
+.badge--button[data-tone="exit"]:active {
+  border-color: rgba(0, 230, 118, 0.58);
+  background: rgba(0, 230, 118, 0.22);
 }
 
 .script-grid {
