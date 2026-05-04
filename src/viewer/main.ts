@@ -243,6 +243,24 @@ function getInspectorScrollContainer(): HTMLElement {
     : scroll;
 }
 
+/** Returns the world point to center the initial viewport on: the scene object nearest to the geometric center, or the geometric center if no objects exist. */
+function getSceneFocusPoint(model: SceneModel, bounds: SceneBounds): { x: number; y: number } {
+  const cx = bounds.minX + bounds.width / 2;
+  const cy = bounds.minY + bounds.height / 2;
+  let bestDist = Infinity;
+  let best: { x: number; y: number } = { x: cx, y: cy };
+  for (const obj of model.objects.values()) {
+    const dx = obj.x - cx;
+    const dy = obj.y - cy;
+    const d = dx * dx + dy * dy;
+    if (d < bestDist) {
+      bestDist = d;
+      best = { x: obj.x, y: obj.y };
+    }
+  }
+  return best;
+}
+
 function setStatus(element: HTMLElement, message: string, tone: StatusTone = "neutral"): void {
   element.textContent = message;
   if (tone === "neutral") {
@@ -701,9 +719,10 @@ function getInitialViewport(sceneNumber: number, _model: SceneModel, bounds: Sce
     };
   }
 
+  const focus = getSceneFocusPoint(_model, bounds);
   return {
-    x: Math.floor(bounds.minX + bounds.width / 2 - state.viewport.width / 2),
-    y: Math.floor(bounds.minY + bounds.height / 2 - state.viewport.height / 2),
+    x: Math.floor(focus.x - state.viewport.width / 2),
+    y: Math.floor(focus.y - state.viewport.height / 2),
     width: state.viewport.width,
     height: state.viewport.height,
   };
@@ -1943,10 +1962,11 @@ function initControls(): void {
     if (saveViewport) {
       state.viewport = saveViewport;
     } else {
-      const b = state.runtime.bounds;
+      const { model, bounds } = state.runtime;
+      const focus = getSceneFocusPoint(model, bounds);
       state.viewport = {
-        x: Math.floor(b.minX + b.width / 2 - state.viewport.width / 2),
-        y: Math.floor(b.minY + b.height / 2 - state.viewport.height / 2),
+        x: Math.floor(focus.x - state.viewport.width / 2),
+        y: Math.floor(focus.y - state.viewport.height / 2),
         width: state.viewport.width,
         height: state.viewport.height,
       };
