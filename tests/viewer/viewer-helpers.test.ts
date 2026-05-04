@@ -3,12 +3,108 @@ import {
   clampViewport,
   centerViewportOnPoint,
   formatRewardLabel,
+  getScriptExit,
   getMapViewportOrigin,
   resolveAnimatedObjectFrame,
   resolveInitialSceneNumber,
 } from "../../src/viewer/viewer-helpers.js";
+import { Opcode, type Instruction } from "../../src/index.js";
 
 describe("viewer helpers", () => {
+  it("detects an adjacent change-scene exit with landing coordinates", () => {
+    const instructions: Instruction[] = [
+      {
+        index: 0x350F,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 44 }],
+      },
+      {
+        index: 0x3510,
+        op: Opcode.SET_PARTY_POS,
+        name: "SET_PARTY_POS",
+        params: [
+          { label: "x", type: "number", raw: 57 },
+          { label: "y", type: "number", raw: 117 },
+          { label: "half", type: "boolean", raw: 0 },
+        ],
+      },
+      {
+        index: 0x3511,
+        op: Opcode.STOP_EXECUTION,
+        name: "STOP_EXECUTION",
+        params: [],
+      },
+    ];
+
+    expect(getScriptExit(instructions)).toEqual({ sceneId: 44, x: 57, y: 117, h: 0 });
+  });
+
+  it("still detects a late adjacent exit in a long script window", () => {
+    const filler: Instruction[] = Array.from({ length: 24 }, (_, index) => ({
+      index: 0x34EA + index,
+      op: Opcode.WALK_NORTH,
+      name: "WALK_NORTH",
+      params: [],
+    }));
+    const instructions: Instruction[] = [
+      ...filler,
+      {
+        index: 0x350F,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 44 }],
+      },
+      {
+        index: 0x3510,
+        op: Opcode.SET_PARTY_POS,
+        name: "SET_PARTY_POS",
+        params: [
+          { label: "x", type: "number", raw: 57 },
+          { label: "y", type: "number", raw: 117 },
+          { label: "half", type: "boolean", raw: 0 },
+        ],
+      },
+      {
+        index: 0x3513,
+        op: Opcode.STOP_EXECUTION,
+        name: "STOP_EXECUTION",
+        params: [],
+      },
+    ];
+
+    expect(getScriptExit(instructions)).toEqual({ sceneId: 44, x: 57, y: 117, h: 0 });
+  });
+
+  it("does not pair landing coordinates across a stop boundary", () => {
+    const instructions: Instruction[] = [
+      {
+        index: 0x350F,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 44 }],
+      },
+      {
+        index: 0x3513,
+        op: Opcode.STOP_EXECUTION,
+        name: "STOP_EXECUTION",
+        params: [],
+      },
+      {
+        index: 0x3514,
+        op: Opcode.SET_PARTY_POS,
+        name: "SET_PARTY_POS",
+        params: [
+          { label: "x", type: "number", raw: 57 },
+          { label: "y", type: "number", raw: 117 },
+          { label: "half", type: "boolean", raw: 0 },
+        ],
+      },
+    ];
+
+    expect(getScriptExit(instructions)).toEqual({ sceneId: 44 });
+  });
+
   it("uses the save scene when it is valid", () => {
     expect(resolveInitialSceneNumber(300, 42)).toBe(42);
   });

@@ -647,7 +647,7 @@ function buildObjectSummaries(model: SceneModel, assets: ResourceManager): Map<n
     const summary = assets.getScriptSummary(object.data.triggerScript).trim();
     const rewardLabels = collectScriptRewards(scriptChunk, object.data.triggerScript, assets).map(formatRewardLabel);
 
-    const instructions = parseScript(scriptChunk, object.data.triggerScript, 20);
+    const instructions = parseScript(scriptChunk, object.data.triggerScript, SCRIPT_LINE_LIMIT);
     const exit = getScriptExit(instructions) || undefined;
 
     const title = summary || rewardLabels[0] || (exit ? `Exit to Scene ${exit.sceneId}` : `Object ${object.data.slot}`);
