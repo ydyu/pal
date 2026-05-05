@@ -1579,8 +1579,8 @@ function buildSemanticGutter(inst: Instruction, contextSpriteNum?: number): HTML
       const targetSprite = state.runtime?.model.objects.get(eventParam.raw - 1)?.data.spriteNum;
       if (targetSprite !== undefined) spriteNum = targetSprite;
     }
-    // For SET_DIRECTION, a "dir" number param selects the facing direction
-    const dirParam = inst.params.find(p => p.type === "number" && p.label === "dir");
+    // For SET_DIRECTION and SET_EVENT_ANIM, a "direction" param selects the facing direction
+    const dirParam = inst.params.find(p => p.type === "direction");
     if (dirParam !== undefined) dir = dirParam.raw;
     const thumb = renderTinyPreview("worldFrame", worldFrameParam.raw, spriteNum, dir);
     if (thumb) el.append(thumb);
@@ -1803,7 +1803,14 @@ function renderInspector(): void {
 
   const objectSection = buildInfoSection("Object Details");
   if (selected.data.spriteNum > 0) {
-    const spriteCanvas = renderTinyPreview("worldFrame", 0, selected.data.spriteNum, 2);
+    const frameIndex = resolveAnimatedObjectFrame(
+      selected.direction,
+      selected.currentFrame,
+      selected.data.nSpriteFrames,
+      state.animationStep,
+      selected.data.nSpriteFramesAuto
+    );
+    const spriteCanvas = renderTinyPreview("worldFrame", frameIndex, selected.data.spriteNum);
     if (spriteCanvas) {
       const scale = 2;
       const scaled = document.createElement("canvas");

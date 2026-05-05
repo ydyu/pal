@@ -63,7 +63,7 @@ export type ParamType =
   | "number" | "boolean" | "word" | "dialogue" | "worldFrame"
   | "script" | "portrait" | "scene" | "music" | "sound"
   | "magic" | "event" | "worldSprite" | "battleSprite" | "signed"
-  | "item" | "battleGroup";
+  | "item" | "battleGroup" | "direction";
 
 export interface ParamDef {
   label: string;
@@ -96,13 +96,13 @@ export const OPCODE_DEFINITIONS: Record<number, OpcodeDefinition> = {
   [Opcode.WALK_NORTH]: { name: "WALK_NORTH" },
   [Opcode.WALK_EAST]: { name: "WALK_EAST" },
   [Opcode.WALK_SOUTH]: { name: "WALK_SOUTH" },
-  [Opcode.SET_DIRECTION]: { name: "SET_DIRECTION", a: { label: "dir", type: "number" }, b: { label: "frame", type: "worldFrame" } },
+  [Opcode.SET_DIRECTION]: { name: "SET_DIRECTION", a: { label: "dir", type: "direction" }, b: { label: "frame", type: "worldFrame" } },
   [Opcode.WALK_TO_TILE]: { name: "WALK_TO_TILE", a: { label: "x", type: "number" }, b: { label: "y", type: "number" }, c: { label: "half", type: "boolean" } },
   [Opcode.WALK_TO_TILE_SLOW]: { name: "WALK_TO_TILE_SLOW", a: { label: "x", type: "number" }, b: { label: "y", type: "number" }, c: { label: "half", type: "boolean" } },
   [Opcode.MOVE_EVENT_REL]: { name: "MOVE_EVENT_REL", a: { label: "event", type: "event" }, b: { label: "dx", type: "number" }, c: { label: "dy", type: "number" } },
   [Opcode.SET_EVENT_POS]: { name: "SET_EVENT_POS", a: { label: "event", type: "event" }, b: { label: "x", type: "number" }, c: { label: "y", type: "number" } },
   [Opcode.SET_EVENT_IMAGE]: { name: "SET_EVENT_IMAGE", a: { label: "frame", type: "worldFrame" } },
-  [Opcode.SET_EVENT_ANIM]: { name: "SET_EVENT_ANIM", a: { label: "event", type: "event" }, b: { label: "direction", type: "number" }, c: { label: "frame", type: "worldFrame" } },
+  [Opcode.SET_EVENT_ANIM]: { name: "SET_EVENT_ANIM", a: { label: "event", type: "event" }, b: { label: "dir", type: "direction" }, c: { label: "frame", type: "worldFrame" } },
   [Opcode.SET_TRIGGER_SCRIPT]: { name: "SET_TRIGGER_SCRIPT", a: { label: "event", type: "event" }, b: { label: "script", type: "script" } },
   [Opcode.SET_PLAYER_IMAGE]: { name: "SET_PLAYER_IMAGE", a: { label: "img", type: "battleSprite" } },
   [Opcode.TELEPORT_OUT]: { name: "TELEPORT_OUT", a: { label: "failure_jump", type: "script" } },
