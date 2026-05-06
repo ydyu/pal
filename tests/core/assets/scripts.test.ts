@@ -72,7 +72,7 @@ describe("scripts asset parser", () => {
       name: "SET_EVENT_ANIM",
       params: [
         { label: "event", raw: 77 },
-        { label: "direction", raw: 4 },
+        { label: "dir", raw: 4 },
         { label: "frame", raw: 1 },
       ],
     });
@@ -81,7 +81,7 @@ describe("scripts asset parser", () => {
       name: "OBJ_IDLE_WALK",
       params: [],
     });
-    expect(formatInstruction(script[0])).toBe("  SET_EVENT_ANIM     event=77 direction=4 frame=1");
+    expect(formatInstruction(script[0])).toBe("  SET_EVENT_ANIM     event=77 dir=4 frame=1");
     expect(formatInstruction(script[1])).toBe("  OBJ_IDLE_WALK");
   });
 
