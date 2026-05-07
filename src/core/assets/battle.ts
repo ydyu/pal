@@ -21,6 +21,7 @@ export function parseEnemyTeam(chunk: Uint8Array, groupId: number): number[] {
 
 export interface EnemyStats {
   id: number;
+  spriteId: number;
   idleFrames: number;
   magicFrames: number;
   attackFrames: number;
@@ -63,6 +64,7 @@ function parseEnemyRecord(reader: ByteReader, index: number): EnemyStats {
   const offset = index * ENEMY_RECORD_SIZE;
   return {
     id: index,
+    spriteId: index,
     idleFrames: reader.readUint16LE(offset + 0),
     magicFrames: reader.readUint16LE(offset + 2),
     attackFrames: reader.readUint16LE(offset + 4),

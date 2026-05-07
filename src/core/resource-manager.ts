@@ -12,6 +12,7 @@ import { parseEventObject, type EventObject } from "./assets/event-objects.js";
 import { ByteReader } from "./binary.js";
 import { SceneModel, type SpriteResolver } from "./scene-model.js";
 import { parseEnemyTeam, parseEnemyStatsTable, type EnemyStats } from "./assets/battle.js";
+import { parseItemTable, type Item } from "./assets/items.js";
 
 /**
  * High-level interface for accessing PAL game assets without needing to know
@@ -24,6 +25,7 @@ export class ResourceManager implements SpriteResolver {
     words?: string[];
     scenes?: readonly Scene[];
     enemyStats?: EnemyStats[];
+    items?: (Item | undefined)[];
   } = {};
 
   constructor(private files: Record<string, Uint8Array>) {}
@@ -210,16 +212,20 @@ export class ResourceManager implements SpriteResolver {
 
   /**
    * Retrieves the composition of an enemy team.
-   * Returns an array of objects containing the name and master asset ID for each enemy.
+   * Returns an array of objects containing the name and distinct IDs for each enemy.
    */
-  public getEnemyTeam(groupId: number): Array<{ name: string, assetId: number, wordId: number }> {
+  public getEnemyTeam(groupId: number): Array<{ name: string, enemyId: number, spriteId: number, wordId: number }> {
     const teamChunk = this.getArchive("DATA.MKF").getChunk(DataSubfile.EnemyTeam);
     const wordIndices = parseEnemyTeam(teamChunk, groupId);
-    return wordIndices.map(idx => ({
-      name: this.getWord(idx),
-      assetId: this.getWordAssetId(idx),
-      wordId: idx,
-    }));
+    return wordIndices.map(idx => {
+      const assetId = this.getWordAssetId(idx);
+      return {
+        name: this.getWord(idx),
+        enemyId: assetId,
+        spriteId: assetId,
+        wordId: idx,
+      };
+    });
   }
 
   /**
@@ -234,25 +240,45 @@ export class ResourceManager implements SpriteResolver {
   }
 
   /**
-   * Retrieves an enemy's combat stats by their master asset ID (V1).
+   * Retrieves an enemy's combat stats by their logical enemy ID.
    */
-  public getEnemyStats(assetId: number): EnemyStats | undefined {
-    return this.getEnemyStatsTable()[assetId];
+  public getEnemyStats(enemyId: number): EnemyStats | undefined {
+    return this.getEnemyStatsTable()[enemyId];
   }
 
   /**
-   * Retrieves an enemy's combat stats by their WORD.DAT index.
-   * This internally resolves the index to a master asset ID (V1).
+   * Retrieves an item's combat stats by their WORD.DAT index.
+   * This internally resolves the index to a logical enemy ID.
    */
   public getEnemyStatsByWord(wordDatIndex: number): EnemyStats | undefined {
-    const assetId = this.getWordAssetId(wordDatIndex);
-    if (assetId === 0) return undefined;
-    return this.getEnemyStats(assetId);
+    const enemyId = this.getWordAssetId(wordDatIndex);
+    if (enemyId === 0) return undefined;
+    return this.getEnemyStats(enemyId);
+  }
+
+  /**
+   * Retrieves the full table of parsed items.
+   * Items are located at WORD.DAT indices 61 to 294.
+   */
+  public getItems(): readonly (Item | undefined)[] {
+    if (!this.cache.items) {
+      const chunk = this.getArchive("SSS.MKF").getChunk(SssSubfile.NameDefinition);
+      this.cache.items = parseItemTable(chunk, id => this.getWord(id));
+    }
+    return this.cache.items;
+  }
+
+  /**
+   * Retrieves an item by its WORD.DAT ID.
+   */
+  public getItem(id: number): Item | undefined {
+    return this.getItems()[id];
   }
 
   /**
    * Retrieves the raw script table chunk from SSS.MKF.
    */
+
   public getScriptChunk(): Uint8Array {
     return this.getArchive("SSS.MKF").getChunk(SssSubfile.ScriptTable);
   }

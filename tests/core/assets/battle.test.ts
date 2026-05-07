@@ -46,6 +46,7 @@ describe("EnemyStats parsing", () => {
 
     const slime = statsTable[1]!;
     expect(slime.id).toBe(1);
+    expect(slime.spriteId).toBe(1);
     expect(slime.health).toBe(28);
     expect(slime.level).toBe(0);
     expect(slime.attackStrength).toBe(-1);

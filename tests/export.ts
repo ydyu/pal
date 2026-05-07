@@ -1181,7 +1181,7 @@ cli
     const printTeam = (g: number) => {
       const enemies = assets.getEnemyTeam(g);
       if (enemies.length === 0) return;
-      const entries = enemies.map(e => `${e.wordId} ${e.name} [asset=${e.assetId}]`);
+      const entries = enemies.map(e => `${e.wordId} ${e.name} [enemy=${e.enemyId}, sprite=${e.spriteId}]`);
       console.log(`Team ${g}: ${entries.join("  |  ")}`);
     };
 
@@ -1217,7 +1217,6 @@ cli
     }
 
     const name = assets.getWord(wordId);
-    const assetId = assets.getWordAssetId(wordId);
     
     let stealItemName = "None";
     if (stats.stealItem !== 0) stealItemName = assets.getWord(stats.stealItem) || "Unknown";
@@ -1228,7 +1227,7 @@ cli
     const effAtk = getEffectiveAttack(stats.level, stats.attackStrength);
     const effDef = getEffectiveDefense(stats.level, stats.defense);
 
-    console.log(`Enemy Word ID: ${wordId}  |  Name: "${name}"  |  Asset ID: ${assetId}`);
+    console.log(`Enemy Word ID: ${wordId}  |  Name: "${name}"  |  Enemy ID: ${stats.id}  |  Sprite ID: ${stats.spriteId}`);
     console.log(`HP: ${stats.health}  |  Level: ${stats.level}  |  Exp: ${stats.exp}  |  Cash: ${stats.cash}`);
     console.log(`Attack: ${effAtk} (Base: ${stats.attackStrength})  |  Defense: ${effDef} (Base: ${stats.defense})`);
     console.log(`Magic: ${stats.magicStrength}  |  Dexterity: ${stats.dexterity}`);
@@ -1236,6 +1235,47 @@ cli
     console.log(`Physical Resistance (Divisor): ${stats.physicalResistance}  |  Poison Resistance: ${stats.poisonResistance}`);
     console.log(`Steal Item: ${stats.stealItem} (${stealItemName}, Amt: ${stats.stealItemAmount})`);
     console.log(`Magic Spell: ${stats.magic} (${magicName})`);
+  });
+
+cli
+  .command("item <id>", "Show complete item metadata by WORD.DAT index")
+  .option("--dir <dir>", "Game directory")
+  .action((idStr, options) => {
+    const gameDir = getGameDir(options.dir);
+    const assets = getLoader(gameDir);
+    
+    const wordId = parseInt(idStr, 10);
+    if (isNaN(wordId) || wordId < 61 || wordId > 294) {
+      console.error(`Invalid item word ID: ${idStr}. Range: 61 to 294`);
+      return;
+    }
+
+    const item = assets.getItem(wordId);
+    if (!item) {
+      console.error(`No item metadata found for word ID ${wordId}`);
+      return;
+    }
+
+    const flags = [];
+    if (item.flags.usable) flags.push("usable");
+    if (item.flags.equippable) flags.push("equippable");
+    if (item.flags.throwable) flags.push("throwable");
+    if (item.flags.consuming) flags.push("consuming");
+    if (item.flags.applyToAll) flags.push("applyToAll");
+    if (item.flags.sellable) flags.push("sellable");
+
+    const compat = item.flags.equippableByRole
+      .map((e, i) => e ? assets.getWord(36 + i) : null)
+      .filter(r => r !== null);
+
+    console.log(`Item Word ID: ${item.id}  |  Name: "${item.name}"  |  Sprite ID: ${item.spriteId}`);
+    console.log(`Price: ${item.price}`);
+    console.log(`Script On Use: 0x${item.scriptOnUse.toString(16).padStart(4, "0").toUpperCase()} (${item.scriptOnUse})  |  Script On Equip: 0x${item.scriptOnEquip.toString(16).padStart(4, "0").toUpperCase()} (${item.scriptOnEquip})`);
+    console.log(`Script On Throw: 0x${item.scriptOnThrow.toString(16).padStart(4, "0").toUpperCase()} (${item.scriptOnThrow})${item.scriptDesc !== undefined ? `  |  Script Desc: 0x${item.scriptDesc.toString(16).padStart(4, "0").toUpperCase()} (${item.scriptDesc})` : ""}`);
+    console.log(`Flags: ${flags.join(", ") || "none"}`);
+    if (compat.length > 0) {
+      console.log(`Role Compatibility: ${compat.join(", ")}`);
+    }
   });
 
 cli.help();

@@ -410,4 +410,44 @@ describe("ResourceManager", () => {
       expect(() => assets.getSprite("world", 0)).toThrow(); // Fails on garbage RLE, but AFTER decompression attempt
     });
   });
+
+  it("should retrieve enemy data and teams correctly", () => {
+    // EnemyTeam (DATA.MKF sub 2): 1 team, 5 slots. Slot 0 = wordId 400
+    const enemyTeam = new Uint8Array(10);
+    enemyTeam[0] = 0x90; // 400 = 0x0190
+    enemyTeam[1] = 0x01;
+    
+    // EnemyData (DATA.MKF sub 1): 1 record (Slime)
+    const enemyData = new Uint8Array(70);
+    enemyData[22] = 50; // HP
+
+    const dataMkf = new Uint8Array([
+      16, 0, 0, 0, 16, 0, 0, 0, 86, 0, 0, 0, 96, 0, 0, 0, // Header: 3 subs (index 0,1,2) + sentinel
+      ...enemyData,
+      ...enemyTeam
+    ]);
+
+    // NameDef (SSS sub 2): Map wordId 400 to assetId 0
+    const nameDef = new Uint8Array(401 * 12);
+    nameDef[400 * 12] = 0; // assetId 0
+    nameDef[400 * 12 + 1] = 0;
+
+    const assets = new ResourceManager({
+      ...mockFiles,
+      "DATA.MKF": dataMkf,
+      "SSS.MKF": assetsToSssMkf({ nameDef }),
+      "WORD.DAT": new Uint8Array(1000).fill(0x20), // Enough for 400 words
+    });
+
+    const team = assets.getEnemyTeam(0);
+    expect(team).toHaveLength(1);
+    expect(team[0].enemyId).toBe(0);
+    expect(team[0].spriteId).toBe(0);
+    expect(team[0].wordId).toBe(400);
+
+    const stats = assets.getEnemyStats(0);
+    expect(stats).toBeDefined();
+    expect(stats?.health).toBe(50);
+    expect(stats?.spriteId).toBe(0);
+  });
 });
