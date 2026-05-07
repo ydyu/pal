@@ -107,6 +107,17 @@ describe("scripts asset parser", () => {
     expect(script[1].op).toBe(Opcode.PLAY_SOUND);
   });
 
+  it("should stop parsing on STOP_AND_CHANGE", () => {
+    const raw = new Uint8Array([
+      0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // STOP_AND_CHANGE
+      0x47, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // PLAY_SOUND 1
+    ]);
+
+    const script = parseScript(raw, 0);
+    expect(script).toHaveLength(1);
+    expect(script[0].op).toBe(Opcode.STOP_AND_CHANGE);
+  });
+
   it("should collect rewards across STOP_AND_ADVANCE chains", () => {
     const raw = new Uint8Array([
       0xff, 0xff, 0x64, 0x00, 0x00, 0x00, 0x00, 0x00, // SHOW_DIALOGUE 100

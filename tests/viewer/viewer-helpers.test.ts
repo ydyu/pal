@@ -105,6 +105,61 @@ describe("viewer helpers", () => {
     expect(getScriptExit(instructions)).toEqual({ sceneId: 44 });
   });
 
+  it("does not pair landing coordinates across STOP_AND_CHANGE or JUMP boundaries", () => {
+    const stopAndChange: Instruction[] = [
+      {
+        index: 0x350F,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 44 }],
+      },
+      {
+        index: 0x3510,
+        op: Opcode.STOP_AND_CHANGE,
+        name: "STOP_AND_CHANGE",
+        params: [{ label: "next", type: "script", raw: 0x1234 }, { label: "loops", type: "number", raw: 0 }],
+      },
+      {
+        index: 0x3511,
+        op: Opcode.SET_PARTY_POS,
+        name: "SET_PARTY_POS",
+        params: [
+          { label: "x", type: "number", raw: 57 },
+          { label: "y", type: "number", raw: 117 },
+          { label: "half", type: "boolean", raw: 0 },
+        ],
+      },
+    ];
+
+    const jump: Instruction[] = [
+      {
+        index: 0x350F,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 44 }],
+      },
+      {
+        index: 0x3510,
+        op: Opcode.JUMP,
+        name: "JUMP",
+        params: [{ label: "target", type: "script", raw: 0x1234 }, { label: "loops", type: "number", raw: 0 }],
+      },
+      {
+        index: 0x3511,
+        op: Opcode.SET_PARTY_POS,
+        name: "SET_PARTY_POS",
+        params: [
+          { label: "x", type: "number", raw: 57 },
+          { label: "y", type: "number", raw: 117 },
+          { label: "half", type: "boolean", raw: 0 },
+        ],
+      },
+    ];
+
+    expect(getScriptExit(stopAndChange)).toEqual({ sceneId: 44 });
+    expect(getScriptExit(jump)).toEqual({ sceneId: 44 });
+  });
+
   it("uses the save scene when it is valid", () => {
     expect(resolveInitialSceneNumber(300, 42)).toBe(42);
   });

@@ -462,7 +462,7 @@ export function parseScript(
       params
     });
 
-    if (op === Opcode.STOP_EXECUTION || op === Opcode.JUMP) {
+    if (op === Opcode.STOP_EXECUTION || op === Opcode.JUMP || op === Opcode.STOP_AND_CHANGE) {
       break;
     }
   }

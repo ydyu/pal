@@ -187,7 +187,7 @@ def walk_pickup_script(scripts: bytes, idx: int, max_ops: int = 64):
             rewards.append(("item", a))
         elif op == sss.Opcode.ADD_CASH:
             rewards.append(("cash", sss.to_signed16(a)))
-        if op == sss.Opcode.STOP_EXECUTION:
+        if op in (sss.Opcode.STOP_EXECUTION, sss.Opcode.STOP_AND_CHANGE):
             break
     return rewards, (last_pre if last_pre is not None else last_post), ops
 
@@ -199,7 +199,7 @@ def find_exit_scene(scripts: bytes, idx: int, max_ops: int = 80) -> int | None:
         op, a = struct.unpack_from("<2H", scripts, i * 8)
         if op == sss.Opcode.CHANGE_SCENE:
             return a
-        if op == sss.Opcode.STOP_EXECUTION:
+        if op in (sss.Opcode.STOP_EXECUTION, sss.Opcode.STOP_AND_CHANGE):
             break
     return None
 

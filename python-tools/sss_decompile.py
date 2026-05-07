@@ -267,7 +267,7 @@ def disasm(
                 print(line)
         else:
             print(fmt_op(i, op, a, b, c, msgs))
-        if stop_on_end and op == 0x0000:
+        if stop_on_end and op in (Opcode.STOP_EXECUTION, Opcode.STOP_AND_CHANGE, Opcode.JUMP):
             break
 
 
