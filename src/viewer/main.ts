@@ -1589,21 +1589,51 @@ function buildSemanticGutter(inst: Instruction, contextSpriteNum?: number): HTML
   // Item: name from WORD.DAT + icon from BALL.MKF (via NameDef V1)
   const itemParam = inst.params.find(p => p.type === "item");
   if (itemParam && state.assets) {
-    const name = state.assets.getWord(itemParam.raw);
-    if (name) {
+    const item = state.assets.getItem(itemParam.raw);
+    if (item) {
       const span = document.createElement("span");
       span.className = "script-gutter-text";
-      span.textContent = name;
+      span.textContent = item.name;
       el.append(span);
-    }
-    if (state.files["BALL.MKF"]) {
-      try {
-        const spriteIndex = state.assets.getWordAssetId(itemParam.raw);
-        if (spriteIndex > 0) {
-          const thumb = renderTinyPreview("item", spriteIndex);
-          if (thumb) el.append(thumb);
-        }
-      } catch { /* ignore */ }
+
+      if (item.scriptOnUse > 0) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "script-param script-param--script";
+        btn.textContent = `script=${formatHex(item.scriptOnUse)}`;
+        btn.style.marginLeft = "4px";
+        btn.addEventListener("click", () => {
+          const targetIdx = item.scriptOnUse;
+          if (!state.scriptStack.includes(targetIdx)) {
+            state.scriptStack.push(targetIdx);
+            state.collapsedScripts.delete(targetIdx);
+            const scrollContainer = getInspectorScrollContainer();
+            const savedScrollTop = scrollContainer.scrollTop;
+            renderInspector();
+            scrollContainer.scrollTop = savedScrollTop;
+          }
+          scrollScriptBlockIntoView(targetIdx);
+        });
+        el.append(btn);
+      }
+
+      if (state.files["BALL.MKF"]) {
+        try {
+          if (item.spriteId > 0) {
+            const thumb = renderTinyPreview("item", item.spriteId);
+            if (thumb) el.append(thumb);
+          }
+        } catch { /* ignore */ }
+      }
+    } else {
+      // Fallback for names if not a valid item record
+      const name = state.assets.getWord(itemParam.raw);
+      if (name) {
+        const span = document.createElement("span");
+        span.className = "script-gutter-text";
+        span.textContent = name;
+        el.append(span);
+      }
     }
   }
 
@@ -1640,8 +1670,8 @@ function buildSemanticGutter(inst: Instruction, contextSpriteNum?: number): HTML
           span.textContent = enemy.name;
           groupWrap.append(span);
         }
-        if (state.files["ABC.MKF"] && enemy.assetId > 0) {
-          const thumb = renderTinyPreview("enemyBattle", enemy.assetId);
+        if (state.files["ABC.MKF"] && enemy.spriteId > 0) {
+          const thumb = renderTinyPreview("enemyBattle", enemy.spriteId);
           if (thumb) groupWrap.append(thumb);
         }
       }
