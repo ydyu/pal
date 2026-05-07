@@ -430,12 +430,17 @@ export function parseScript(
   const reader = new ByteReader(source, "scripts");
   const totalInstructions = Math.floor(reader.length / 8);
   const script: Instruction[] = [];
+  const visited = new Set<number>();
+  let currentIndex = startIndex;
 
-  for (let i = 0; i < limit; i++) {
-    const idx = startIndex + i;
-    if (idx < 0 || idx >= totalInstructions) break;
+  while (script.length < limit) {
+    if (currentIndex < 0 || currentIndex >= totalInstructions || visited.has(currentIndex)) {
+      break;
+    }
 
-    const offset = idx * 8;
+    visited.add(currentIndex);
+
+    const offset = currentIndex * 8;
     const op = reader.readUint16LE(offset);
     const a = reader.readUint16LE(offset + 2);
     const b = reader.readUint16LE(offset + 4);
@@ -456,14 +461,20 @@ export function parseScript(
     }
 
     script.push({
-      index: idx,
+      index: currentIndex,
       op,
       name: def.name,
       params
     });
 
-    if (op === Opcode.STOP_EXECUTION || op === Opcode.JUMP || op === Opcode.STOP_AND_CHANGE) {
+    if (op === Opcode.STOP_EXECUTION) {
       break;
+    }
+
+    if (op === Opcode.JUMP || op === Opcode.STOP_AND_CHANGE) {
+      currentIndex = a;
+    } else {
+      currentIndex++;
     }
   }
 

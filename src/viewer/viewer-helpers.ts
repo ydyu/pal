@@ -43,7 +43,7 @@ export function getScriptExit(instructions: Instruction[]): ExitInfo | null {
       return exit;
     }
 
-    if (inst.op === Opcode.STOP_EXECUTION || inst.op === Opcode.STOP_AND_CHANGE || inst.op === Opcode.JUMP) {
+    if (inst.op === Opcode.STOP_EXECUTION) {
       break;
     }
   }

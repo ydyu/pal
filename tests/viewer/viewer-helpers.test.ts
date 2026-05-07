@@ -160,6 +160,25 @@ describe("viewer helpers", () => {
     expect(getScriptExit(jump)).toEqual({ sceneId: 44 });
   });
 
+  it("finds CHANGE_SCENE even if it appears after a JUMP (relying on flattened parser)", () => {
+    const instructions: Instruction[] = [
+      {
+        index: 0x1000,
+        op: Opcode.JUMP,
+        name: "JUMP",
+        params: [{ label: "target", type: "script", raw: 0x2000 }, { label: "loops", type: "number", raw: 0 }],
+      },
+      {
+        index: 0x2000,
+        op: Opcode.CHANGE_SCENE,
+        name: "CHANGE_SCENE",
+        params: [{ label: "scene", type: "scene", raw: 99 }],
+      },
+    ];
+
+    expect(getScriptExit(instructions)).toEqual({ sceneId: 99 });
+  });
+
   it("uses the save scene when it is valid", () => {
     expect(resolveInitialSceneNumber(300, 42)).toBe(42);
   });

@@ -145,4 +145,49 @@ describe("scripts asset parser", () => {
       { kind: "cash", amount: 500 },
     ]);
   });
+
+  it("should follow JUMP to a new address", () => {
+    const raw = new Uint8Array([
+      0x03, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // JUMP target=2
+      0x47, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // PLAY_SOUND 1 (skipped)
+      0x47, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // PLAY_SOUND 2
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // STOP_EXECUTION
+    ]);
+
+    const script = parseScript(raw, 0);
+    expect(script).toHaveLength(3);
+    expect(script[0].op).toBe(Opcode.JUMP);
+    expect(script[1].op).toBe(Opcode.PLAY_SOUND);
+    expect(script[1].params[0].raw).toBe(2);
+    expect(script[2].op).toBe(Opcode.STOP_EXECUTION);
+  });
+
+  it("should follow STOP_AND_CHANGE to a new address", () => {
+    const raw = new Uint8Array([
+      0x02, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // STOP_AND_CHANGE next=2
+      0x47, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // PLAY_SOUND 1 (skipped)
+      0x47, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, // PLAY_SOUND 2
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // STOP_EXECUTION
+    ]);
+
+    const script = parseScript(raw, 0);
+    expect(script).toHaveLength(3);
+    expect(script[0].op).toBe(Opcode.STOP_AND_CHANGE);
+    expect(script[1].op).toBe(Opcode.PLAY_SOUND);
+    expect(script[1].params[0].raw).toBe(2);
+    expect(script[2].op).toBe(Opcode.STOP_EXECUTION);
+  });
+
+  it("should terminate on cycles", () => {
+    const raw = new Uint8Array([
+      0x03, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // JUMP target=1
+      0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // JUMP target=0
+    ]);
+
+    const script = parseScript(raw, 0);
+    expect(script).toHaveLength(2);
+    expect(script[0].index).toBe(0);
+    expect(script[1].index).toBe(1);
+    // Third iteration would hit index 0 again and break
+  });
 });
