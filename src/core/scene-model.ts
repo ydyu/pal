@@ -40,7 +40,7 @@ export class SceneModel {
   /** The active player party. */
   public party: PartyMember[] = [];
   /** Mapping roleId -> spriteNum for party members (populated from SaveData when available). */
-  private playerRoleSpriteNums: Map<number, number> = new Map();
+  public playerRoleSpriteNums: Map<number, number> = new Map();
   /** Global party layer offset (SDLPAL wLayer). */
   private partyLayer = 0;
   /** Active event objects (NPCs, triggers, pickups) in this scene. */

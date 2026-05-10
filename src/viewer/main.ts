@@ -1582,7 +1582,25 @@ function buildSemanticGutter(inst: Instruction, contextSpriteNum?: number): HTML
     // For SET_DIRECTION and SET_EVENT_ANIM, a "direction" param selects the facing direction
     const dirParam = inst.params.find(p => p.type === "direction");
     if (dirParam !== undefined) dir = dirParam.raw;
+
+    const playerParam = inst.params.find(p => p.label === "player");
+    if (playerParam !== undefined) {
+      spriteNum = undefined;
+      if (state.runtime) {
+        const member = state.runtime.model.party[playerParam.raw];
+        if (member) {
+          spriteNum = state.runtime.model.playerRoleSpriteNums.get(member.roleId);
+        }
+      }
+    }
+
     const thumb = renderTinyPreview("worldFrame", worldFrameParam.raw, spriteNum, dir);
+    if (thumb) el.append(thumb);
+  }
+
+  const worldSpriteParam = inst.params.find(p => p.type === "worldSprite");
+  if (worldSpriteParam) {
+    const thumb = renderTinyPreview("worldFrame", 0, worldSpriteParam.raw);
     if (thumb) el.append(thumb);
   }
 
