@@ -91,12 +91,14 @@ export interface SaveData {
 export function parseSave(source: ByteSource): SaveData {
   const reader = new ByteReader(source, "SAVEDGAME");
 
+  const partyMemberCount = reader.readUint16LE(0x0006);
   const party: PartyMember[] = [];
   // PARTY Array (5 x 10 bytes) at 0x002C
   for (let i = 0; i < 5; i++) {
+    if (i > partyMemberCount) break;
     const offset = 0x002C + i * 10;
     const roleId = reader.readUint16LE(offset);
-    if (roleId === 0xFFFF || (roleId === 0 && i > 0)) continue; 
+    if (roleId === 0xFFFF) continue; 
     party.push({
       roleId,
       x: reader.readInt16LE(offset + 2),
